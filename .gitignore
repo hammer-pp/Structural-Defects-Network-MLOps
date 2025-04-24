@@ -4,3 +4,5 @@ env/
 artifact_folder
 
 preprocess.ipynb
+
+.DS_Store
