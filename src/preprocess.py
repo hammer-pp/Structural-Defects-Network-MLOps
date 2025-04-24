@@ -150,6 +150,6 @@ balanced_train_set = Subset(train_set, balanced_indices)
 balanced_label_counts = Counter([label for _, label in balanced_train_set])
 print("Balanced class distribution:", balanced_label_counts)
 
-save_dataset_as_folder(train_set, "artifact_folder", "train", class_names)
+save_dataset_as_folder(balanced_train_set, "artifact_folder", "train", class_names)
 save_dataset_as_folder(val_set, "artifact_folder", "val", class_names)
 save_dataset_as_folder(test_set, "artifact_folder", "test", class_names)
