@@ -3,6 +3,8 @@ env/
 
 artifact_folder
 
+artifact_folder_old
+
 preprocess.ipynb
 
 .DS_Store
