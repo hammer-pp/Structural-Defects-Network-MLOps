@@ -43,14 +43,8 @@ def get_data(slice=5):
 image_dataset, class_names = get_data(slice=1)
 
 # Print total number of images
-print("Number of images:", 25000)
+print("Number of images:", len(image_dataset))
 print("Class names:", class_names)
-
-# Example: check label of first image
-image, label = image_dataset[0]
-print("Label index:", label)
-print("Label name:", class_names[label])
-
 
 import os
 import torch
@@ -62,6 +56,7 @@ from typing import Tuple
 from torchvision.utils import save_image
 from tqdm import tqdm
 
+### Preprocessing ###
 # Denoising transform
 class Denoise:
     def __call__(self, img):
@@ -83,6 +78,7 @@ val_test_transform = transforms.Compose([
     Denoise(),
     transforms.ToTensor(),
 ])
+
 
 # Load combined dataset
 def load_combined_dataset(transform) -> Tuple[ConcatDataset, list]:
@@ -123,6 +119,36 @@ def save_dataset_as_folder(dataset, save_path, split_name, class_names):
     df = pd.DataFrame(data)
     df.to_csv(label_csv, index=False)
     print(f"✅ {split_name} saved to {image_folder} with labels in {label_csv}")
+
+train_set,class_names = load_combined_dataset(train_transform)
+
+
+### Balance the train dataset ###
+from torch.utils.data import Subset
+import numpy as np
+from collections import Counter
+
+# Get indices of each class
+class_0_indices = [i for i, (_, label) in enumerate(train_set) if label == 0]
+class_1_indices = [i for i, (_, label) in enumerate(train_set) if label == 1]
+
+# Determine the minimum class size
+min_class_size = min(len(class_0_indices), len(class_1_indices))
+
+# Randomly sample indices to balance the classes
+balanced_class_0_indices = np.random.choice(class_0_indices, min_class_size, replace=False)
+balanced_class_1_indices = np.random.choice(class_1_indices, min_class_size, replace=False)
+
+# Combine and shuffle the indices
+balanced_indices = np.concatenate([balanced_class_0_indices, balanced_class_1_indices])
+np.random.shuffle(balanced_indices)
+
+# Create a balanced dataset
+balanced_train_set = Subset(train_set, balanced_indices)
+
+# Verify the new class distribution
+balanced_label_counts = Counter([label for _, label in balanced_train_set])
+print("Balanced class distribution:", balanced_label_counts)
 
 save_dataset_as_folder(train_set, "artifact_folder", "train", class_names)
 save_dataset_as_folder(val_set, "artifact_folder", "val", class_names)
