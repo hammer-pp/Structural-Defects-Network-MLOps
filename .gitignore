@@ -1,6 +1,10 @@
 # Ignore virtual environment folder
 env/
 
+artifact_folder/
+
+artifact_folder_old/
+
 artifact_folder
 
 artifact_folder_old
