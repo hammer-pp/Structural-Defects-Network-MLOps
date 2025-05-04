@@ -9,6 +9,13 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import random
+
+SEED = 42  # or any number you like
+
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
 
 
 def get_data(slice=5):
@@ -55,6 +62,14 @@ import torchvision.transforms.functional as TF
 from typing import Tuple
 from torchvision.utils import save_image
 from tqdm import tqdm
+import random
+
+SEED = 42  # or any number you like
+
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
 
 ### Preprocessing ###
 # Denoising transform
@@ -127,6 +142,14 @@ train_set,class_names = load_combined_dataset(train_transform)
 from torch.utils.data import Subset
 import numpy as np
 from collections import Counter
+import random
+
+SEED = 42  # or any number you like
+
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
 
 # Get indices of each class
 class_0_indices = [i for i, (_, label) in enumerate(train_set) if label == 0]
