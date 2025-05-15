@@ -1,5 +1,11 @@
 # Ignore virtual environment folder
 env/
+# Ignore Environment variables file 
+.venv
+
+.env
+
+*.pyc
 
 artifact_folder/
 
@@ -9,9 +15,19 @@ artifact_folder
 
 artifact_folder_old
 
+artifact_folder_old
+
 preprocess.ipynb
 
 .DS_Store
 
 */.ipynb_checkpoints
 */__pycache__
+preprocess.ipynb
+
+.DS_Store
+
+*/.ipynb_checkpoints
+*/__pycache__
+
+logs
