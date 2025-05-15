@@ -1,12 +1,12 @@
 import sys
 import os
 import logging
+from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.models import Variable
-from datetime import datetime, timedelta
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))  # Add the current directory to sys.path
 from callables.preprocess import preprocess_data_callable
@@ -30,28 +30,26 @@ with DAG(
     dag_id='crack_cnn_training_pipeline',
     default_args=default_args,
     description='Retrain model when enough new data is available',
-    schedule_interval='@monthly',
-    start_date=datetime(2023, 1, 1),
+    start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=['concrete', 'dag'],
 ) as dag:
 
-    start = DummyOperator(task_id='start')
+    start = EmptyOperator(task_id='start')
 
     # return s3_to_csv if there are more than 10 imgs, stop_no_data otherwise
     check_data = BranchPythonOperator(
         task_id='check_new_data_from_cloudinary',
         python_callable=check_new_images,
-        provide_context=True,  # optional depending on your version
     )
     
-    retrieve_new_images_url = PythonOperator(
-        task_id='s3_to_csv',
+    load_new_img_url = PythonOperator(
+        task_id='load_new_img',
         python_callable = generate_dataset_csv,
     )
     
     # Define dummy task if not enough data
-    skip_training = DummyOperator(task_id='stop_no_data')
+    skip_training = EmptyOperator(task_id='skip_training')
 
     preprocess = PythonOperator(
         task_id='preprocess_data',
@@ -63,23 +61,22 @@ with DAG(
         },
 )
 
-    train = PythonOperator(
-        task_id='train_model',
-        python_callable=train_model,
-        provide_context=True
+    ResNet_train = EmptyOperator(
+        task_id="ResNet_training"
+    )
+    MobileNet_train = EmptyOperator(
+        task_id="MobileNet_training"
     )
 
     log = PythonOperator(
         task_id='log_model',
         python_callable=log_model,
-        provide_context=True
+        trigger_rule='none_failed_min_one_success',
     )
 
-
-    end = DummyOperator(task_id='end', trigger_rule='none_failed_min_one_success')
+    end = EmptyOperator(task_id='end')
 
     # DAG flow with branching
-    start >> check_data
-    check_data >> retrieve_new_images_url >> preprocess >> train >> log >> end
-    # check_data >> retrieve_new_images_url >> preprocess >> [ResNet_train, MobileNet_train] >> log >> end
-    check_data >> skip_training >> log >> end
+    start >> check_data >> [load_new_img_url, skip_training]
+    load_new_img_url >> preprocess >> [ResNet_train, MobileNet_train] >> log >> end
+    skip_training >> log >> end

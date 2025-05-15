@@ -570,7 +570,6 @@ def create_dag(dag_id, schedule, default_args):
         load_data_task = PythonOperator(
             task_id='load_data',
             python_callable=load_combined_dataset,
-            provide_context=True,
             op_kwargs={'transform_type': 'val_test'},
         )
 

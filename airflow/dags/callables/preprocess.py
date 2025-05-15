@@ -2,7 +2,7 @@ def preprocess_data_callable(
     dataset_root: str = '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/Dataset',
     artifact_folder: str = '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/artifact_folder',
     categories: list = ['Decks', 'Walls', 'Pavements'],
-    image_size: Tuple[int, int] = (256, 256),
+    image_size: tuple[int, int] = (256, 256),
     train_ratio: float = 0.7,
     val_ratio: float = 0.15,
     seed: int = 42
