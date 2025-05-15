@@ -9,7 +9,7 @@ from airflow.models import Variable
 from datetime import datetime, timedelta
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))  # Add the current directory to sys.path
-from callables.preprocess import preprocess_data
+from callables.preprocess import preprocess_data_callable
 from callables.check_img import check_new_images
 from callables.log_model import log_model
 from callables.s3_to_csv import generate_dataset_csv
@@ -54,9 +54,14 @@ with DAG(
     skip_training = DummyOperator(task_id='stop_no_data')
 
     preprocess = PythonOperator(
-        task_id='preprocessing',
-        python_callable=preprocess_data
-    )
+        task_id='preprocess_data',
+        python_callable=preprocess_data_callable,
+        op_kwargs={
+            'dataset_root': '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/Dataset',
+            'artifact_folder': '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/artifact_folder',
+            'categories': ['Decks', 'Walls', 'Pavements'],
+        },
+)
 
     train = PythonOperator(
         task_id='train_model',
