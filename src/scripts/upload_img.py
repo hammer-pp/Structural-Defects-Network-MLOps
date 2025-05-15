@@ -5,7 +5,7 @@ import cloudinary
 import cloudinary.uploader
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Load environment variables``
+# Load environment variables
 load_dotenv()
 
 # Configure Cloudinary
