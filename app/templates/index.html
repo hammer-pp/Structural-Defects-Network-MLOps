@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Classifier</title>
+</head>
+<body>
+    <h2>Upload an image for prediction</h2>
+    <form action="/" enctype="multipart/form-data" method="post">
+        <input type="file" name="file">
+        <button type="submit">Predict</button>
+    </form>
+    {% if result %}
+    <h3>Prediction: {{ result }}</h3>
+    {% endif %}
+</body>
+</html>
