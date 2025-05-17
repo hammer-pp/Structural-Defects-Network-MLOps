@@ -137,17 +137,28 @@ min_class_size = min(len(class_0_indices), len(class_1_indices))
 balanced_class_0_indices = np.random.choice(class_0_indices, min_class_size, replace=False)
 balanced_class_1_indices = np.random.choice(class_1_indices, min_class_size, replace=False)
 
+balanced_class_1_indices_6040 = np.random.choice(class_1_indices, int(min_class_size*3/2), replace=False)
+
 # Combine and shuffle the indices
 balanced_indices = np.concatenate([balanced_class_0_indices, balanced_class_1_indices])
 np.random.shuffle(balanced_indices)
 
+balanced_indices_6040 = np.concatenate([balanced_class_0_indices, balanced_class_1_indices_6040])
+np.random.shuffle(balanced_indices_6040)
+
 # Create a balanced dataset
 balanced_train_set = Subset(train_set, balanced_indices)
+balanced_train_set_6040 = Subset(train_set, balanced_indices_6040)
 
 # Verify the new class distribution
 balanced_label_counts = Counter([label for _, label in balanced_train_set])
 print("Balanced class distribution:", balanced_label_counts)
 
+
+balanced_label_counts_6040 = Counter([label for _, label in balanced_train_set_6040])
+print("Balanced class distribution 60/40:", balanced_label_counts_6040)
+
+save_dataset_as_folder(balanced_train_set_6040, "artifact_folder", "train6040", class_names)
 save_dataset_as_folder(balanced_train_set, "artifact_folder", "train", class_names)
 save_dataset_as_folder(val_set, "artifact_folder", "val", class_names)
 save_dataset_as_folder(test_set, "artifact_folder", "test", class_names)
