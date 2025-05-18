@@ -37,7 +37,7 @@ pip install -r requirements.txt
 Run the preprocessing script before training or evaluation:
 
 ```bash
-python src/preprocess.py
+python src/preprocess_set_seed.py
 ```
 
 ### 4. Data Artifacts
