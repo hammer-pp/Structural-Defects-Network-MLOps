@@ -58,11 +58,11 @@ with DAG(
         },
     )
 
-    ResNet_train = EmptyOperator(
+    ResNet_train = PythonOperator(
         task_id="ResNet_training",
         python_callable = train_resnet,
     )
-    MobileNet_train = EmptyOperator(
+    MobileNet_train = PythonOperator(
         task_id="MobileNet_training",
         python_callable = train_mobilenet,
     )
