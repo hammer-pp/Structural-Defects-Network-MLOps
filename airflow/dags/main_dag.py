@@ -13,12 +13,9 @@ from callables.preprocess import preprocess_data_callable
 from callables.check_img import check_new_images
 from callables.log_model import log_model
 from callables.s3_to_csv import generate_dataset_csv
-
+from callables.train_resnet import train_resnet
+from callables.train_mobilenet import train_mobilenet
 logger = logging.getLogger(__name__)
-
-def train_model():
-    print("Training model... (mock)")
-    Variable.set("last_retrain_time", datetime.utcnow().isoformat())
 
 default_args = {
     'owner': 'Blabla',
@@ -55,17 +52,19 @@ with DAG(
         task_id='preprocess_data',
         python_callable=preprocess_data_callable,
         op_kwargs={
-            'dataset_root': '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/Dataset',
-            'artifact_folder': '/home/santitham/airflow/dags/Structural-Defects-Network-MLOps/artifact_folder',
+            'dataset_root': '/opt/airflow/dataset',
+            'artifact_folder': '/opt/airflow/artifact_folder',
             'categories': ['Decks', 'Walls', 'Pavements'],
         },
-)
+    )
 
     ResNet_train = EmptyOperator(
-        task_id="ResNet_training"
+        task_id="ResNet_training",
+        python_callable = train_resnet,
     )
     MobileNet_train = EmptyOperator(
-        task_id="MobileNet_training"
+        task_id="MobileNet_training",
+        python_callable = train_mobilenet,
     )
 
     log = PythonOperator(
