@@ -9,6 +9,7 @@ from callables.trainers.mobilenet import train
 from airflow.models import Variable
 import logging
 from datetime import datetime
+from callables.evaluation.evaluate import evaluate_model_on_split
 
 logger = logging.getLogger(__name__)
 
@@ -54,23 +55,31 @@ def train_mobilenet(**kwargs):
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
 
     # Train model (returns best val F1)
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device)
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device,save_path="opt/airflow/model/mobilenet_model.pth")
 
-    # Evaluate F1 on val set for XCom
-    model.eval()
-    all_preds, all_labels = [], []
-    with torch.no_grad():
-        for x, y in val_loader:
-            x, y = x.to(device), y.to(device)
-            outputs = model(x)
-            preds = outputs.argmax(1)
-            all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(y.cpu().numpy())
-    val_f1 = f1_score(all_labels, all_preds)
-
+    # # Evaluate F1 on val set for XCom
+    # model.eval()
+    # all_preds, all_labels = [], []
+    # with torch.no_grad():
+    #     for x, y in val_loader:
+    #         x, y = x.to(device), y.to(device)
+    #         outputs = model(x)
+    #         preds = outputs.argmax(1)
+    #         all_preds.extend(preds.cpu().numpy())
+    #         all_labels.extend(y.cpu().numpy())
+    # val_f1 = f1_score(all_labels, all_preds)
+    
+    metrics = evaluate_model_on_split(model, 'val')
+    
     # Save Airflow metadata
-    model_path = "../model/mobilenet_model.pth"
-    ti.xcom_push(key="model_path", value=model_path)
-    ti.xcom_push(key="val_f1", value=val_f1)
-    Variable.set("last_retrain_time", datetime.utcnow().isoformat())
-    logger.info(f"✅ MobileNet training completed. Best F1: {val_f1:.4f}")
+    model_path = "opt/airflow/model/mobilenet_model.pth"
+    ti.xcom_push(key="mobilenet_model_path", value=model_path)
+    ti.xcom_push(key='mobilenet_model_path', value=model_path)
+    ti.xcom_push(key='mobilenet_model_acc',value=metrics['Accuracy'])
+    ti.xcom_push(key='mobilenet_model_precision',value=metrics['Precision'])
+    ti.xcom_push(key='mobilenet_model_recall',value=metrics['Recall'])
+    ti.xcom_push(key='mobilenet_model_f1',value=metrics['F1'])
+    ti.xcom_push(key='mobilenet_model_auc-roc',value=metrics['AUC-ROC'])
+    ti.xcom_push(key='mobilenet_model_confusion-mx',value=metrics['Confusion Matrix'])
+    Variable.set("last_retrain_time", datetime.now().isoformat())
+    logger.info(f"MobileNet model and metrics saved. Model path: {model_path}")

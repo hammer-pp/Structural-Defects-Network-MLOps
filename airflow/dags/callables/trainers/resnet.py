@@ -5,25 +5,45 @@ from sklearn.metrics import f1_score
 
 logger = logging.getLogger(__name__)
 
-def train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, epochs=10, save_path="../model/resnet_model.pth"):
+def train_one_epoch(model, loader,criterion, optimizer, device):
+    model.train()
+    total_loss, correct = 0.0, 0
+
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        optimizer.zero_grad()
+        outputs = model(x)
+        loss = criterion(outputs, y)
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item() * x.size(0)
+        correct += (outputs.argmax(1) == y).sum().item()
+
+    train_loss = total_loss / len(loader.dataset)
+    train_acc = correct / len(loader.dataset)
+    return train_loss, train_acc
+    
+def train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, 
+          num_epochs=10, save_path="opt/airflow/model/resnet_model.pth"):
     best_f1 = 0.0
 
-    for epoch in range(epochs):
-        model.train()
-        total_loss, correct = 0.0, 0
+    for epoch in range(num_epochs):
+        train_loss, train_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
+        # model.train()
+        # total_loss, correct = 0.0, 0
 
-        for x, y in train_loader:
-            x, y = x.to(device), y.to(device)
-            optimizer.zero_grad()
-            outputs = model(x)
-            loss = criterion(outputs, y)
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.item() * x.size(0)
-            correct += (outputs.argmax(1) == y).sum().item()
+        # for x, y in train_loader:
+        #     x, y = x.to(device), y.to(device)
+        #     optimizer.zero_grad()
+        #     outputs = model(x)
+        #     loss = criterion(outputs, y)
+        #     loss.backward()
+        #     optimizer.step()
+        #     total_loss += loss.item() * x.size(0)
+        #     correct += (outputs.argmax(1) == y).sum().item()
 
-        train_loss = total_loss / len(train_loader.dataset)
-        train_acc = correct / len(train_loader.dataset)
+        # train_loss = total_loss / len(train_loader.dataset)
+        # train_acc = correct / len(train_loader.dataset)
 
         model.eval()
         val_loss, all_preds, all_labels = 0.0, [], []

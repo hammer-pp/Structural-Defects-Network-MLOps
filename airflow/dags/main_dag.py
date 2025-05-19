@@ -86,4 +86,5 @@ with DAG(
     # DAG flow with branching
     start >> check_and_generate >> [preprocess, skip_training]
     preprocess >> [ResNet_train, MobileNet_train] >> log >> end
+    # preprocess >> ResNet_train >> MobileNet_train >> log >> end # if you have a lot of ram
     skip_training >> log >> end

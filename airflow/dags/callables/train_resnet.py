@@ -33,6 +33,9 @@ def train_resnet(**kwargs):
     
     ti = kwargs['ti']
 
+    # Device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     train_loader, val_loader, test_loader = get_dataloaders()
 
     model = get_resnet_model()
@@ -41,12 +44,18 @@ def train_resnet(**kwargs):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
     
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler)
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, save_path="opt/airflow/model/resnet_model.pth")
+    
+    metrics = evaluate_model_on_split(model, 'val')
     
     # Save model metadata to Airflow
-    model_path = 'model/resnet_crack_classifier.pth'
-    metrics = evaluate_model_on_split(model, 'val')
-    accuracy = metrics['Accuracy']
+    model_path = 'opt/airflow/model/resnet_model.pth'
     ti.xcom_push(key='resnet_model_path', value=model_path)
-    ti.xcom_push(key='resnet_accuracy', value=accuracy)
+    ti.xcom_push(key='resnet_model_acc',value=metrics['Accuracy'])
+    ti.xcom_push(key='resnet_model_precision',value=metrics['Precision'])
+    ti.xcom_push(key='resnet_model_recall',value=metrics['Recall'])
+    ti.xcom_push(key='resnet_model_f1',value=metrics['F1'])
+    ti.xcom_push(key='resnet_model_auc-roc',value=metrics['AUC-ROC'])
+    ti.xcom_push(key='resnet_model_confusion-mx',value=metrics['Confusion Matrix'])
     Variable.set("last_retrain_time", datetime.now().isoformat())
+    logger.info(f"ResNet model and metrics saved. Model path: {model_path}")
