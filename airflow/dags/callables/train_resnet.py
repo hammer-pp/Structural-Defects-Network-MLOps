@@ -38,7 +38,7 @@ def train_resnet(**kwargs):
     
     train_loader, val_loader, test_loader = get_dataloaders()
 
-    model = get_resnet_model()
+    model = get_resnet_model(device)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -48,14 +48,17 @@ def train_resnet(**kwargs):
     
     metrics = evaluate_model_on_split(model, 'val')
     
-    # Save model metadata to Airflow
-    model_path = 'opt/airflow/model/resnet_model.pth'
-    ti.xcom_push(key='resnet_model_path', value=model_path)
-    ti.xcom_push(key='resnet_model_acc',value=metrics['Accuracy'])
-    ti.xcom_push(key='resnet_model_precision',value=metrics['Precision'])
-    ti.xcom_push(key='resnet_model_recall',value=metrics['Recall'])
-    ti.xcom_push(key='resnet_model_f1',value=metrics['F1'])
-    ti.xcom_push(key='resnet_model_auc-roc',value=metrics['AUC-ROC'])
-    ti.xcom_push(key='resnet_model_confusion-mx',value=metrics['Confusion Matrix'])
+    # Save model metadata to XCom for logging
+    model_path = "opt/airflow/model/resnet_model.pth"
+    metrics = evaluate_model_on_split(model, 'val', device)
+
+    ti.xcom_push(key="model_type", value="resnet")
+    ti.xcom_push(key="model_path", value=model_path)
+    ti.xcom_push(key="accuracy", value=metrics["val"]["Accuracy"])  # or test
+    ti.xcom_push(key="optimizer", value="Adam")
+    ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
+    ti.xcom_push(key="epochs", value=kwargs.get("epochs", 10))
+    ti.xcom_push(key="metrics", value=metrics)
+
     Variable.set("last_retrain_time", datetime.now().isoformat())
-    logger.info(f"ResNet model and metrics saved. Model path: {model_path}")
+    logger.info(f"ResNet model and metrics saved. Path: {model_path}")

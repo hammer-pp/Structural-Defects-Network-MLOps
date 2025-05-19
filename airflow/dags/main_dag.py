@@ -75,9 +75,22 @@ with DAG(
         python_callable = train_mobilenet,
     )
 
-    log = PythonOperator(
-        task_id='log_model',
+    # log = PythonOperator(
+    #     task_id='log_model',
+    #     python_callable=log_model,
+    # )
+    
+    resnet_log = PythonOperator(
+        task_id='log_model_resnet',
         python_callable=log_model,
+        op_kwargs={'task_id': 'train_resnet'},
+        trigger_rule='none_failed_min_one_success',
+    )
+
+    mobilenet_log = PythonOperator(
+        task_id='log_model_mobilenet',
+        python_callable=log_model,
+        op_kwargs={'task_id': 'train_mobilenet'},
         trigger_rule='none_failed_min_one_success',
     )
 
@@ -85,6 +98,6 @@ with DAG(
 
     # DAG flow with branching
     start >> check_and_generate >> [preprocess, skip_training]
-    preprocess >> [ResNet_train, MobileNet_train] >> log >> end
-    # preprocess >> ResNet_train >> MobileNet_train >> log >> end # if you have a lot of ram
-    skip_training >> log >> end
+    # preprocess >> [ResNet_train, MobileNet_train] >> log >> end # if you have low ram
+    preprocess >> ResNet_train >> MobileNet_train >> [resnet_log,mobilenet_log] >> end 
+    skip_training >> end

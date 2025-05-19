@@ -47,7 +47,7 @@ def train_mobilenet(**kwargs):
     train_loader, val_loader, _ = get_dataloaders()
 
     # Model
-    model = get_mobilenet_model().to(device)
+    model = get_mobilenet_model(device)
 
     # Training setup
     criterion = nn.CrossEntropyLoss()
@@ -69,17 +69,17 @@ def train_mobilenet(**kwargs):
     #         all_labels.extend(y.cpu().numpy())
     # val_f1 = f1_score(all_labels, all_preds)
     
-    metrics = evaluate_model_on_split(model, 'val')
-    
     # Save Airflow metadata
     model_path = "opt/airflow/model/mobilenet_model.pth"
-    ti.xcom_push(key="mobilenet_model_path", value=model_path)
-    ti.xcom_push(key='mobilenet_model_path', value=model_path)
-    ti.xcom_push(key='mobilenet_model_acc',value=metrics['Accuracy'])
-    ti.xcom_push(key='mobilenet_model_precision',value=metrics['Precision'])
-    ti.xcom_push(key='mobilenet_model_recall',value=metrics['Recall'])
-    ti.xcom_push(key='mobilenet_model_f1',value=metrics['F1'])
-    ti.xcom_push(key='mobilenet_model_auc-roc',value=metrics['AUC-ROC'])
-    ti.xcom_push(key='mobilenet_model_confusion-mx',value=metrics['Confusion Matrix'])
+    metrics = evaluate_model_on_split(model, 'val', device)
+    
+    ti.xcom_push(key="model_type", value="mobilenet")
+    ti.xcom_push(key="model_path", value=model_path)
+    ti.xcom_push(key="accuracy", value=metrics["val"]["Accuracy"])  # or test
+    ti.xcom_push(key="optimizer", value="Adam")
+    ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
+    ti.xcom_push(key="epochs", value=kwargs.get("epochs", 10))
+    ti.xcom_push(key="metrics", value=metrics)
+    
     Variable.set("last_retrain_time", datetime.now().isoformat())
-    logger.info(f"MobileNet model and metrics saved. Model path: {model_path}")
+    logger.info(f"MobileNet model and metrics saved. Path: {model_path}")
