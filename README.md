@@ -57,11 +57,27 @@ Structural-Defects-Network-MLOps/
 └── artifact_folder/     # Contains train/test/val data (ignored by Git)
 ```
 
-
 ## Start a docker for Airflow
 
+### 5. (Optional) Set Environment Variables
+
+Create a `.env` file in the project root to store environment variables (such as database URLs, API keys, etc.).  
+Example `.env` file:
+
+```env
+AIRFLOW_UID=501
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+DATASET_PATH=path/to/your/dataset
+```
+
 ### Start docker
-docker compose up --build
+
+docker compose up -d --build
+
+username and password are airflow and airflow
 
 ### Stop docker
+
 docker compose down --volumes --rmi all

@@ -75,7 +75,8 @@ x-airflow-common: &airflow-common
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - /Users/woosh/Study/CPE393 MLops/Structural-Defects-Network-MLOps/Dataset:/opt/airflow/dataset
+    # Use an environment variable for dataset path to make it portable
+    - ${DATASET_PATH}:/opt/airflow/dataset
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     redis:
