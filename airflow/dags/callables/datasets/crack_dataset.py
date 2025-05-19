@@ -2,7 +2,8 @@ import os
 import pandas as pd
 from torch.utils.data import Dataset
 from PIL import Image
-
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 
 class CrackDataset(Dataset):
     """
@@ -57,14 +58,14 @@ def get_dataloaders(batch_size=32):
     Notes:
         - Assumes the existence of a CrackDataset class that takes a CSV file of labels, an image directory, and a transform.
         - Images are resized to 224x224, converted to tensors, and normalized using ImageNet statistics.
-        - The root directory for datasets is '../artifact_folder', with subdirectories for train, val, and test splits.
+        - The root directory for datasets is '/opt/airflow/artifact_folder', with subdirectories for train, val, and test splits.
     """
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    root = '../artifact_folder'
+    root = '/opt/airflow/artifact_folder'
     train_set = CrackDataset(f'{root}/train/labels.csv', f'{root}/train/images', transform)
     val_set = CrackDataset(f'{root}/val/labels.csv', f'{root}/val/images', transform)
     test_set = CrackDataset(f'{root}/test/labels.csv', f'{root}/test/images', transform)

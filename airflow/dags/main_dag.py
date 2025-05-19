@@ -10,9 +10,11 @@ from airflow.models import Variable
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))  # Add the current directory to sys.path
 from callables.preprocess import preprocess_data_callable
-from callables.check_img import check_new_images
+# Deprecated
+# from callables.check_img import check_new_images
+# from callables.s3_to_csv import generate_dataset_csv
+from callables.check_and_generate_imgs import check_and_generate_csv
 from callables.log_model import log_model
-from callables.s3_to_csv import generate_dataset_csv
 from callables.train_resnet import train_resnet
 from callables.train_mobilenet import train_mobilenet
 logger = logging.getLogger(__name__)
@@ -33,28 +35,34 @@ with DAG(
 ) as dag:
 
     start = EmptyOperator(task_id='start')
-
-    # return s3_to_csv if there are more than 10 imgs, stop_no_data otherwise
-    check_data = BranchPythonOperator(
-        task_id='check_new_data_from_cloudinary',
-        python_callable=check_new_images,
-    )
     
-    load_new_img_url = PythonOperator(
-        task_id='load_new_img',
-        python_callable = generate_dataset_csv,
+    # Deprecated
+    # return s3_to_csv if there are more than 10 imgs, stop_no_data otherwise
+    # check_data = BranchPythonOperator(
+    #     task_id='check_new_data_from_cloudinary',
+    #     python_callable=check_new_images,
+    # )
+    # load_new_img_url = PythonOperator(
+    #     task_id='load_new_img',
+    #     python_callable = generate_dataset_csv,
+    # )
+    
+    check_and_generate = BranchPythonOperator(
+        task_id='check_and_generate_csv',
+        python_callable=check_and_generate_csv,
     )
     
     # Define dummy task if not enough data
     skip_training = EmptyOperator(task_id='skip_training')
 
+    
     preprocess = PythonOperator(
         task_id='preprocess_data',
         python_callable=preprocess_data_callable,
         op_kwargs={
             'dataset_root': '/opt/airflow/dataset',
             'artifact_folder': '/opt/airflow/artifact_folder',
-            'categories': ['Decks', 'Walls', 'Pavements'],
+            'categories': ['Decks', 'Walls', 'Pavements','Users'],
         },
     )
 
@@ -76,6 +84,6 @@ with DAG(
     end = EmptyOperator(task_id='end')
 
     # DAG flow with branching
-    start >> check_data >> [load_new_img_url, skip_training]
-    load_new_img_url >> preprocess >> [ResNet_train, MobileNet_train] >> log >> end
+    start >> check_and_generate >> [preprocess, skip_training]
+    preprocess >> [ResNet_train, MobileNet_train] >> log >> end
     skip_training >> log >> end

@@ -2,6 +2,14 @@ import cloudinary
 import cloudinary.api
 import csv
 import os
+import logging
+
+# --- Setup logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # --- Setup your Cloudinary credentials ---
 cloudinary.config(
@@ -12,8 +20,9 @@ cloudinary.config(
 )
 
 # --- Parameters ---
-FOLDERS = ['Decks/', 'Walls/', 'Pavements/']
-OUTPUT_CSV = 'cloudinary_dataset_all.csv'
+# FOLDERS = ['Decks/', 'Walls/', 'Pavements/']
+FOLDERS = ['Users/']
+OUTPUT_CSV = 'cloudinary_dataset_users.csv'
 INCLUDE_VERSION = True
 
 # --- Helper to build Cloudinary image URL ---
@@ -27,11 +36,27 @@ def build_cloudinary_url(resource, include_version=True):
 
 # --- Main function ---
 def generate_dataset_csv():
-    print(f"📡 Starting scan for folders: {FOLDERS}")
+    """
+    Scans specified folders in a Cloudinary account, retrieves image resources, and generates a CSV file containing image URLs, place, and label information.
+
+    The function iterates through each folder listed in the global FOLDERS variable, paginates through all resources using the Cloudinary API, and constructs a list of rows with the image URL, place, and label. The results are written to a CSV file specified by the global OUTPUT_CSV variable.
+
+    Side Effects:
+        - Logs progress and status messages.
+        - Writes a CSV file to disk.
+
+    Assumes the following global variables and functions are defined:
+        - FOLDERS: List of folder names to scan.
+        - cloudinary: Cloudinary API client.
+        - build_cloudinary_url: Function to construct the image URL.
+        - INCLUDE_VERSION: Boolean or parameter for URL versioning.
+        - OUTPUT_CSV: Output path for the CSV file.
+    """
+    logger.info(f"📡 Starting scan for folders: {FOLDERS}")
     all_rows = []
 
     for folder in FOLDERS:
-        print(f"🔍 Scanning folder: {folder}")
+        logger.info(f"🔍 Scanning folder: {folder}")
         next_cursor = None
         total_in_folder = 0
 
@@ -57,23 +82,23 @@ def generate_dataset_csv():
                 all_rows.append([url, place, label])
 
                 if i % 50 == 0:
-                    print(f"  → Processed {i+1}/{total_in_folder} images in current batch...")
+                    logger.info(f"  → Processed {i+1}/{total_in_folder} images in current batch...")
 
             next_cursor = response.get('next_cursor')
             if not next_cursor:
                 break
 
-        print(f"✅ {total_in_folder} images found in '{folder}'")
+        logger.info(f"✅ {total_in_folder} images found in '{folder}'")
 
     # Write CSV
-    print(f"📝 Writing CSV: {OUTPUT_CSV}")
+    logger.info(f"📝 Writing CSV: {OUTPUT_CSV}")
     with open(OUTPUT_CSV, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['url', 'place', 'label'])
         for row in all_rows:
             writer.writerow(row)
 
-    print(f"🎉 Done! Dataset CSV saved to: {OUTPUT_CSV}")
+    logger.info(f"🎉 Done! Dataset CSV saved to: {OUTPUT_CSV}")
 
 # --- Run ---
 if __name__ == "__main__":

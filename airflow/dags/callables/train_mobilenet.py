@@ -13,6 +13,30 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 def train_mobilenet(**kwargs):
+    """
+    Trains a MobileNet model using training and validation data loaders, evaluates its F1 score on the validation set, 
+    and pushes relevant metadata to Airflow XComs and Variables.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments, expected to include 'ti' (Airflow TaskInstance).
+
+    Workflow:
+        - Selects device (GPU if available, else CPU).
+        - Loads training and validation data loaders.
+        - Initializes MobileNet model, loss function, optimizer, and learning rate scheduler.
+        - Trains the model using the provided data loaders.
+        - Evaluates the trained model on the validation set and computes the F1 score.
+        - Pushes the model path and validation F1 score to Airflow XCom.
+        - Updates Airflow Variable with the last retrain timestamp.
+        - Logs completion and best F1 score.
+
+    Side Effects:
+        - Saves model metadata and metrics to Airflow XCom and Variables.
+        - Logs training completion and F1 score.
+
+    Returns:
+        None
+    """
     ti = kwargs["ti"]
 
     # Device
