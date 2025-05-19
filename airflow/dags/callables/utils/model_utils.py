@@ -9,7 +9,7 @@ def get_resnet_model(device):
     model = model.to(device)
     return model
 
-def get_mobilenet_model(num_classes=2,device):
+def get_mobilenet_model(device, num_classes=2):
     model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.DEFAULT)
     model.classifier[3] = nn.Linear(model.classifier[3].in_features, num_classes)
     model = model.to(device)
