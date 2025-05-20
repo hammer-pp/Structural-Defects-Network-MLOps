@@ -44,9 +44,7 @@ def train_resnet(**kwargs):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
     
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, save_path="opt/airflow/model/resnet_model.pth")
-    
-    metrics = evaluate_model_on_split(model, 'val')
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=1, save_path="opt/airflow/model/resnet_model.pth")
     
     # Save model metadata to XCom for logging
     model_path = "opt/airflow/model/resnet_model.pth"
