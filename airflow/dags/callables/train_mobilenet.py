@@ -75,7 +75,7 @@ def train_mobilenet(**kwargs):
     
     ti.xcom_push(key="model_type", value="mobilenet")
     ti.xcom_push(key="model_path", value=model_path)
-    ti.xcom_push(key="accuracy", value=metrics["val"]["Accuracy"])  # or test
+    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
     ti.xcom_push(key="epochs", value=kwargs.get("epochs", 10))

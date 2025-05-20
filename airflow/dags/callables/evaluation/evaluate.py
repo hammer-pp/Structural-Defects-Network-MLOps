@@ -30,7 +30,7 @@ def evaluate_model_on_split(model, split_name, device):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    base_path = f"opt/airflow/artifact_folder/images/{split_name}"
+    base_path = f"/opt/airflow/artifact_folder/{split_name}"
     labels_df = pd.read_csv(os.path.join(base_path, "labels.csv"))
     images_dir = os.path.join(base_path, "images")
 
