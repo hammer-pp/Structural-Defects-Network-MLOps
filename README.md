@@ -42,6 +42,16 @@ pip install -r requirements.txt
 ## 🗂️ Project Structure
 
 ```bash
+python src/preprocess_set_seed.py
+```
+
+### 4. Data Artifacts
+
+After running the preprocessing script:
+The train, test, and validation datasets will be saved inside the artifact_folder/ directory.
+The artifact_folder/ is excluded from version control and will not be uploaded to Git (as specified in .gitignore).
+
+```kotlin
 Structural-Defects-Network-MLOps/
 ├── Dataset/                  # Raw Data (Decks, Walls, Pavements)
 ├── airflow/
