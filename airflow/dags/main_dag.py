@@ -30,6 +30,7 @@ with DAG(
     default_args=default_args,
     description='Retrain model when enough new data is available',
     start_date=datetime(2025, 1, 1),
+    schedule_interval='@weekly',
     catchup=False,
     tags=['concrete', 'dag'],
 ) as dag:
