@@ -84,14 +84,14 @@ with DAG(
     resnet_log = PythonOperator(
         task_id='log_model_resnet',
         python_callable=log_model,
-        op_kwargs={'task_id': 'train_resnet'},
+        op_kwargs={'task_id': 'ResNet_training'},
         trigger_rule='none_failed_min_one_success',
     )
 
     mobilenet_log = PythonOperator(
         task_id='log_model_mobilenet',
         python_callable=log_model,
-        op_kwargs={'task_id': 'train_mobilenet'},
+        op_kwargs={'task_id': 'MobileNet_training'},
         trigger_rule='none_failed_min_one_success',
     )
 
