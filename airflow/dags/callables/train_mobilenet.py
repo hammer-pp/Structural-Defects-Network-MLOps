@@ -53,9 +53,9 @@ def train_mobilenet(**kwargs):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
-
+    num_epochs = 10
     # Train model (returns best val F1)
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=1, save_path="opt/airflow/model/mobilenet_model.pth")
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/mobilenet_model.pth")
 
     # # Evaluate F1 on val set for XCom
     # model.eval()
@@ -78,7 +78,7 @@ def train_mobilenet(**kwargs):
     ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
-    ti.xcom_push(key="epochs", value=kwargs.get("epochs", 10))
+    ti.xcom_push(key="epochs", value=num_epochs)
     ti.xcom_push(key="metrics", value=metrics)
     
     Variable.set("last_retrain_time", datetime.now().isoformat())

@@ -43,8 +43,8 @@ def train_resnet(**kwargs):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
-    
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=1, save_path="opt/airflow/model/resnet_model.pth")
+    num_epochs = 10
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/resnet_model.pth")
     
     # Save model metadata to XCom for logging
     model_path = "opt/airflow/model/resnet_model.pth"
@@ -55,7 +55,7 @@ def train_resnet(**kwargs):
     ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
-    ti.xcom_push(key="epochs", value=kwargs.get("epochs", 10))
+    ti.xcom_push(key="epochs", value=num_epochs)
     ti.xcom_push(key="metrics", value=metrics)
 
     Variable.set("last_retrain_time", datetime.now().isoformat())
