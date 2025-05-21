@@ -28,7 +28,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
 
 def train(model, train_loader, val_loader, criterion, optimizer, scheduler, device,
-          num_epochs=10, save_path="opt/airflow/model/mobilenet_model.pth"):
+          num_epochs=10, save_path="/opt/airflow/model/mobilenet_model.pth"):
     
     best_f1 = 0.0
 

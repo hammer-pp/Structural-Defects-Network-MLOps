@@ -24,7 +24,7 @@ def train_one_epoch(model, loader,criterion, optimizer, device):
     return train_loss, train_acc
     
 def train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, 
-          num_epochs=10, save_path="opt/airflow/model/resnet_model.pth"):
+          num_epochs=10, save_path="/opt/airflow/model/resnet_model.pth"):
     best_f1 = 0.0
 
     for epoch in range(num_epochs):
