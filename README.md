@@ -39,7 +39,9 @@ pip install -r requirements.txt
 
 ---
 
-## 🗂️ Project Structure
+### 3. Run Preprocessing
+
+Run the preprocessing script before training or evaluation:
 
 ```bash
 python src/preprocess_set_seed.py
@@ -108,6 +110,7 @@ DATASET_PATH=<path>/<to>/your/projectStructural-Defects-Network-MLOps\Dataset
 ### 2. Start Airflow
 
 ```bash
+cd airflow
 docker compose up -d --build
 ```
 
@@ -222,8 +225,10 @@ localhost:8000
 
 - Option to submit the image to Cloudinary under:
 
-  - `Users/Cracked/`
-  - `Users/Non-cracked/`
+---
+
+- `Users/Cracked/`
+- `Users/Non-cracked/`
 
 - Those images will later be retrained during the next Airflow pipeline run
 
