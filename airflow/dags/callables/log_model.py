@@ -1,3 +1,4 @@
+import os
 import mlflow
 import mlflow.pytorch
 import logging
@@ -7,15 +8,22 @@ from callables.utils.model_utils import get_resnet_model, get_mobilenet_model
 logger = logging.getLogger(__name__)
 
 def log_model(**kwargs):
-    ti = kwargs['ti']
-    model_path = ti.xcom_pull(task_ids=kwargs['task_id'], key='model_path')
-    accuracy = ti.xcom_pull(task_ids=kwargs['task_id'], key='accuracy')
-    optimizer_name = ti.xcom_pull(task_ids=kwargs['task_id'], key='optimizer')
-    learning_rate = ti.xcom_pull(task_ids=kwargs['task_id'], key='learning_rate')
-    epochs = ti.xcom_pull(task_ids=kwargs['task_id'], key='epochs')
-    model_type = ti.xcom_pull(task_ids=kwargs['task_id'], key='model_type')
+    model_type = kwargs.get("model_type", "unknown")
+    train_task_id = kwargs.get("train_task_id")
+    logger.info(f"Model type: {model_type}, Train Task ID: {train_task_id}")
 
+    ti = kwargs["ti"]
+    model_path = ti.xcom_pull(task_ids=train_task_id, key='model_path')
+    accuracy = ti.xcom_pull(task_ids=train_task_id, key='accuracy')
+    optimizer_name = ti.xcom_pull(task_ids=train_task_id, key='optimizer')
+    learning_rate = ti.xcom_pull(task_ids=train_task_id, key='learning_rate')
+    epochs = ti.xcom_pull(task_ids=train_task_id, key='epochs')
+    
     mlflow.set_tracking_uri("http://host.docker.internal:5000")
+    
+    if model_path is None or not os.path.exists(model_path):
+        raise FileNotFoundError(f"❌ Model file not found at path: {model_path}")
+    
     logger.info(f"📦 Logging {model_type} model to MLflow...")
 
     # Load appropriate model
