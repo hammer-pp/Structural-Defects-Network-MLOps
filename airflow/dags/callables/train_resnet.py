@@ -47,6 +47,7 @@ def train_resnet(**kwargs):
     train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="/opt/airflow/model/resnet_model.pth")
     
     
+    
     # Save model metadata to XCom for logging
     model_path = "/opt/airflow/model/resnet_model.pth"
     metrics = evaluate_model_on_split(model, 'val', device)
