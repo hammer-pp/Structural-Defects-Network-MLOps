@@ -32,13 +32,13 @@ def train_resnet(**kwargs):
     """
     
     ti = kwargs['ti']
-
-    # Device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     train_loader, val_loader, test_loader = get_dataloaders()
+    
+    # Device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = get_resnet_model(device)
+    model = get_resnet_model()
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -46,8 +46,9 @@ def train_resnet(**kwargs):
     num_epochs = 10
     train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/resnet_model.pth")
     
+    
     # Save model metadata to XCom for logging
-    model_path = "opt/airflow/model/resnet_model.pth"
+    model_path = "/opt/airflow/model/resnet_model.pth"
     metrics = evaluate_model_on_split(model, 'val', device)
 
     ti.xcom_push(key="model_type", value="resnet")

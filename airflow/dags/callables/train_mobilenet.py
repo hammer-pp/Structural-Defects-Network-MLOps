@@ -40,14 +40,14 @@ def train_mobilenet(**kwargs):
     """
     ti = kwargs["ti"]
 
+    # Data
+    train_loader, val_loader, _ = get_dataloaders()
+    
     # Device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Data
-    train_loader, val_loader, _ = get_dataloaders()
-
     # Model
-    model = get_mobilenet_model(device)
+    model = get_mobilenet_model()
 
     # Training setup
     criterion = nn.CrossEntropyLoss()
@@ -57,20 +57,9 @@ def train_mobilenet(**kwargs):
     # Train model (returns best val F1)
     train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/mobilenet_model.pth")
 
-    # # Evaluate F1 on val set for XCom
-    # model.eval()
-    # all_preds, all_labels = [], []
-    # with torch.no_grad():
-    #     for x, y in val_loader:
-    #         x, y = x.to(device), y.to(device)
-    #         outputs = model(x)
-    #         preds = outputs.argmax(1)
-    #         all_preds.extend(preds.cpu().numpy())
-    #         all_labels.extend(y.cpu().numpy())
-    # val_f1 = f1_score(all_labels, all_preds)
     
     # Save Airflow metadata
-    model_path = "opt/airflow/model/mobilenet_model.pth"
+    model_path = "/opt/airflow/model/mobilenet_model.pth"
     metrics = evaluate_model_on_split(model, 'val', device)
     
     ti.xcom_push(key="model_type", value="mobilenet")
