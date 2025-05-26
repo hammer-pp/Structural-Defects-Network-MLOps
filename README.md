@@ -164,7 +164,7 @@ It checks:
 
 - Preprocessing includes augmentation, resizing, and denoising filters.
 
-- Models are saved to `opt/airflow/model/` and registered via MLflow.
+- Models are saved to `/opt/airflow/model/` and registered via MLflow.
 
 - Metrics are saved using XCom and optionally pushed to Airflow Variables.
 

@@ -44,7 +44,7 @@ def train_resnet(**kwargs):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
     num_epochs = 10
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/resnet_model.pth")
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="/opt/airflow/model/resnet_model.pth")
     
     
     # Save model metadata to XCom for logging
