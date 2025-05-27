@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 def log_model(**kwargs):
     model_type = kwargs.get("model_type", "unknown")
     train_task_id = kwargs.get("train_task_id")
-    logger.info(f"Model type: {model_type}, Train Task ID: {train_task_id}")
+    logger.info(f"📍 Pulled model type: {model_type}")
+    logger.info(f"🧾 Pulling model_path from task_id={train_task_id}")
 
     ti = kwargs["ti"]
     model_path = ti.xcom_pull(task_ids=train_task_id, key='model_path')
@@ -19,7 +20,7 @@ def log_model(**kwargs):
     learning_rate = ti.xcom_pull(task_ids=train_task_id, key='learning_rate')
     epochs = ti.xcom_pull(task_ids=train_task_id, key='epochs')
     
-    mlflow.set_tracking_uri("http://host.docker.internal:5000")
+    mlflow.set_tracking_uri("http://mlflow:5000")
     
     if model_path is None or not os.path.exists(model_path):
         raise FileNotFoundError(f"❌ Model file not found at path: {model_path}")
