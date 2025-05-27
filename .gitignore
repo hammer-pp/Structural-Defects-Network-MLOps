@@ -32,4 +32,4 @@ preprocess.ipynb
 
 logs
 
-./artifacts
+mlflow/
