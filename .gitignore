@@ -34,7 +34,8 @@ preprocess.ipynb
 
 logs
 
-./artifacts
+mlflow/
+
 
 # For LaTeX documents
 *.acn

@@ -23,9 +23,9 @@ def log_model(**kwargs):
     if not all([model_path, accuracy, optimizer_name, learning_rate, epochs]):
         raise ValueError("❌ One or more required XCom values are missing.")
 
-    mlflow_uri = os.getenv(os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000"))
-    logger.info(f'Set MLFLOW_TRACKING_URI to {mlflow_uri}')
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
     mlflow.set_tracking_uri(mlflow_uri)
+    logger.info(f'Set MLFLOW_TRACKING_URI to {mlflow_uri}')
     
     logger.info(f"Checking model file at: {model_path}")
     if not os.path.exists(model_path):
