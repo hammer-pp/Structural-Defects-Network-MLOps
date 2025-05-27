@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,14 +15,27 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
     <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-2xl">
         <h1 class="text-2xl font-bold text-gray-800 text-center mb-4">Surface Crack Detector</h1>
-        <p class="text-gray-600 text-center mb-6">Upload an image of decks/pavements/walls/user's surface to detect cracks.</p>
+        <p class="text-gray-600 text-center mb-6">Upload an image of decks/pavements/walls/user's surface to detect
+            cracks.</p>
 
-        <form action="/" method="post" enctype="multipart/form-data" class="flex flex-col items-center space-y-4">
-            <input type="file" name="file" accept="image/*" required class="block text-sm text-gray-700 file:py-2 file:px-4 file:rounded file:border-0 file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Predict</button>
+        <form id="uploadForm" action="/" method="post" enctype="multipart/form-data" class="space-y-4 w-full">
+            <div id="dropzone"
+                class="flex items-center justify-center w-full px-4 py-10 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer bg-gray-50 hover:border-blue-500 transition">
+                <input id="fileInput" type="file" name="file" accept="image/*" required class="hidden" />
+                <span class="text-gray-600 text-center">
+                    Drag & Drop image here or <span class="text-blue-600 underline">click to upload</span>
+                </span>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    Predict
+                </button>
+            </div>
+            <p id="fileName" class="text-sm text-gray-500 text-center mt-2 hidden"></p>
         </form>
 
         {% if result %}
@@ -30,9 +44,59 @@
                 <h2 class="text-xl font-semibold text-gray-800">Prediction:</h2>
                 <p class="text-lg text-blue-600 mt-1">{{ result }}</p>
             </div>
+
+            {% if image_url %}
+            <div class="mt-4">
+                <img src="{{ image_url }}" alt="Uploaded Image" class="mx-auto max-h-80 rounded border">
+            </div>
+            {% endif %}
+
+            <form action="/feedback" method="post">
+                <input type="hidden" name="filename" value="{{ filename }}">
+                <input type="hidden" name="predicted_label" value="{{ result }}">
+                <button name="feedback" value="correct"
+                    class="btn bg-green-600 text-white px-4 py-2 rounded">Correct</button>
+                <button name="feedback" value="wrong" class="btn bg-red-600 text-white px-4 py-2 rounded">Wrong</button>
+            </form>
             <a href="/" class="mt-6 text-blue-600 hover:underline">Scan another image</a>
+            {% endif %}
         </div>
-        {% endif %}
+        <br />
     </div>
 </body>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+        fileInput.files = e.dataTransfer.files;
+        showFileName();
+    });
+
+    fileInput.addEventListener('change', showFileName);
+
+    function showFileName() {
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.classList.remove('hidden');
+            fileNameDisplay.innerText = `📄 ${fileInput.files[0].name} selected.`;
+        }
+    }
+
+</script>
+
 </html>

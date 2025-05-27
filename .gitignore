@@ -83,3 +83,7 @@ logs
 .mtc
 build/
 _minted-Main/
+
+# test folder
+test/
+temp/
