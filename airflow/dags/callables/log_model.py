@@ -1,3 +1,4 @@
+import os
 import mlflow
 import mlflow.pytorch
 import logging
@@ -7,15 +8,38 @@ from callables.utils.model_utils import get_resnet_model, get_mobilenet_model
 logger = logging.getLogger(__name__)
 
 def log_model(**kwargs):
-    ti = kwargs['ti']
-    model_path = ti.xcom_pull(task_ids=kwargs['task_id'], key='model_path')
-    accuracy = ti.xcom_pull(task_ids=kwargs['task_id'], key='accuracy')
-    optimizer_name = ti.xcom_pull(task_ids=kwargs['task_id'], key='optimizer')
-    learning_rate = ti.xcom_pull(task_ids=kwargs['task_id'], key='learning_rate')
-    epochs = ti.xcom_pull(task_ids=kwargs['task_id'], key='epochs')
-    model_type = ti.xcom_pull(task_ids=kwargs['task_id'], key='model_type')
+    model_type = kwargs.get("model_type", "unknown")
+    train_task_id = kwargs.get("train_task_id")
+    logger.info(f"📍 Pulled model type: {model_type}")
+    logger.info(f"🧾 Pulling model_path from task_id={train_task_id}")
 
-    mlflow.set_tracking_uri("http://host.docker.internal:5000")
+    ti = kwargs["ti"]
+    model_path = ti.xcom_pull(task_ids=train_task_id, key='model_path')
+    
+    accuracy = ti.xcom_pull(task_ids=train_task_id, key='accuracy')
+    precision = ti.xcom_pull(task_ids=train_task_id, key='precision')
+    recall = ti.xcom_pull(task_ids=train_task_id, key='recall')
+    f1_score = ti.xcom_pull(task_ids=train_task_id, key='f1_score')
+    auc_roc = ti.xcom_pull(task_ids=train_task_id, key='auc_roc')
+    confusion_matrix = ti.xcom_pull(task_ids=train_task_id, key='confusion_matrix')
+    
+    optimizer_name = ti.xcom_pull(task_ids=train_task_id, key='optimizer')
+    learning_rate = ti.xcom_pull(task_ids=train_task_id, key='learning_rate')
+    epochs = ti.xcom_pull(task_ids=train_task_id, key='epochs')
+    
+    if not all([model_path, accuracy, optimizer_name, learning_rate, epochs]):
+        raise ValueError("❌ One or more required XCom values are missing.")
+
+    mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+    mlflow.set_tracking_uri(mlflow_uri)
+    logger.info(f'Set MLFLOW_TRACKING_URI to {mlflow_uri}')
+    
+    logger.info(f"Checking model file at: {model_path}")
+    if not os.path.exists(model_path):
+        logger.error("❌ Model path does not exist inside container.")
+        raise FileNotFoundError(f"Model file not found at path: {model_path}")
+
+    
     logger.info(f"📦 Logging {model_type} model to MLflow...")
 
     # Load appropriate model
@@ -25,19 +49,28 @@ def log_model(**kwargs):
         model = get_mobilenet_model()
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
+    
+    
+    try:
+        model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=True))
+        model.eval()
+        logger.info("✅ Model loaded and set to eval mode successfully.")
+    except Exception as e:
+        logger.exception(f"❌ Failed to load model state dict or set eval mode: {e}")
+        raise
 
-    model.load_state_dict(torch.load(model_path, map_location='cpu'))
-    model.eval()
-
-    with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
-        mlflow.pytorch.log_model(
-            pytorch_model=model,
-            artifact_path="model",
-            registered_model_name=f"{model_type.capitalize()}ConcreteCrackClassifierModel"
-        )
-        mlflow.log_metric("accuracy", accuracy)
-        mlflow.log_param("optimizer", optimizer_name)
-        mlflow.log_param("learning_rate", learning_rate)
-        mlflow.log_param("epochs", epochs)
+    try:
+        with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
+            mlflow.log_metric("accuracy", accuracy)
+            mlflow.log_param("optimizer", optimizer_name)
+            mlflow.log_param("learning_rate", learning_rate)
+            mlflow.log_param("epochs", epochs)
+            mlflow.pytorch.log_model(
+                model,
+                artifact_path="model",
+            )
+    except Exception as e:
+        logger.exception(f"❌ MLflow logging failed: {e}")
+        raise
 
     logger.info("✅ Model and metadata logged to MLflow.")

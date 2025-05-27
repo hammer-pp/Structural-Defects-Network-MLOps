@@ -19,7 +19,7 @@ def check_and_generate_csv(**kwargs):
         secure=True
     )
 
-    OUTPUT_CSV = 'cloudinary_dataset_users.csv'
+    OUTPUT_CSV = '/opt/airflow/cloudinary_dataset_users.csv'
     folders = ["Users/Cracked/", "Users/Non-cracked/"]
     include_version = True
 
@@ -92,3 +92,4 @@ def check_and_generate_csv(**kwargs):
     else:
         logger.info(f"⏹ Only {new_image_count} new images found → skipping.")
         return 'skip_training'
+    # return 'preprocess_data'

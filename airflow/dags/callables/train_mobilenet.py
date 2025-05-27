@@ -40,46 +40,41 @@ def train_mobilenet(**kwargs):
     """
     ti = kwargs["ti"]
 
+    # Data
+    train_loader, val_loader, _ = get_dataloaders()
+    
     # Device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Data
-    train_loader, val_loader, _ = get_dataloaders()
-
     # Model
-    model = get_mobilenet_model(device)
+    model = get_mobilenet_model()
 
     # Training setup
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
-    num_epochs = 10
+    num_epochs = 1
     # Train model (returns best val F1)
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/mobilenet_model.pth")
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="/opt/airflow/model/mobilenet_model.pth")
 
-    # # Evaluate F1 on val set for XCom
-    # model.eval()
-    # all_preds, all_labels = [], []
-    # with torch.no_grad():
-    #     for x, y in val_loader:
-    #         x, y = x.to(device), y.to(device)
-    #         outputs = model(x)
-    #         preds = outputs.argmax(1)
-    #         all_preds.extend(preds.cpu().numpy())
-    #         all_labels.extend(y.cpu().numpy())
-    # val_f1 = f1_score(all_labels, all_preds)
     
     # Save Airflow metadata
-    model_path = "opt/airflow/model/mobilenet_model.pth"
+    model_path = "/opt/airflow/model/mobilenet_model.pth"
     metrics = evaluate_model_on_split(model, 'val', device)
     
     ti.xcom_push(key="model_type", value="mobilenet")
     ti.xcom_push(key="model_path", value=model_path)
-    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
+    
+    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])
+    ti.xcom_push(key="precision", value=metrics["Precision"])
+    ti.xcom_push(key="recall", value=metrics["Recall"])
+    ti.xcom_push(key="f1_score", value=metrics["F1-Score"])
+    ti.xcom_push(key="auc_roc", value=metrics["AUC-ROC"])
+    ti.xcom_push(key="confusion_matrix", value=metrics["Confusion Matrix"])
+    
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
     ti.xcom_push(key="epochs", value=num_epochs)
-    ti.xcom_push(key="metrics", value=metrics)
     
     Variable.set("last_retrain_time", datetime.now().isoformat())
     logger.info(f"MobileNet model and metrics saved. Path: {model_path}")

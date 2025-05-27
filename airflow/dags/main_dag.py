@@ -21,18 +21,18 @@ logger = logging.getLogger(__name__)
 
 default_args = {
     'owner': 'Blabla',
-    'retries': 0,
-    'retry_delay': timedelta(minutes=5)
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+    'start_date' : datetime(2025, 5, 15),
 }
 
 with DAG(
     dag_id='crack_cnn_training_pipeline',
     default_args=default_args,
     description='Retrain model when enough new data is available',
-    start_date=datetime(2025, 1, 1),
-    schedule_interval='@weekly',
     catchup=False,
     tags=['concrete', 'dag'],
+    schedule_interval= '@weekly',
 ) as dag:
 
     start = EmptyOperator(task_id='start')
@@ -84,14 +84,20 @@ with DAG(
     resnet_log = PythonOperator(
         task_id='log_model_resnet',
         python_callable=log_model,
-        op_kwargs={'task_id': 'ResNet_training'},
+        op_kwargs={
+            'model_type': 'resnet',
+            'train_task_id' : 'ResNet_training'
+        },
         trigger_rule='none_failed_min_one_success',
     )
 
     mobilenet_log = PythonOperator(
         task_id='log_model_mobilenet',
         python_callable=log_model,
-        op_kwargs={'task_id': 'MobileNet_training'},
+        op_kwargs={
+            'model_type': 'mobilenet',
+            'train_task_id': 'MobileNet_training'
+        },
         trigger_rule='none_failed_min_one_success',
     )
 

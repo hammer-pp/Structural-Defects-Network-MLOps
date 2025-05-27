@@ -32,31 +32,38 @@ def train_resnet(**kwargs):
     """
     
     ti = kwargs['ti']
-
-    # Device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     train_loader, val_loader, test_loader = get_dataloaders()
+    
+    # Device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = get_resnet_model(device)
+    model = get_resnet_model()
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
-    num_epochs = 10
-    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="opt/airflow/model/resnet_model.pth")
+    num_epochs = 1
+    train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="/opt/airflow/model/resnet_model.pth")
+    
     
     # Save model metadata to XCom for logging
-    model_path = "opt/airflow/model/resnet_model.pth"
+    model_path = "/opt/airflow/model/resnet_model.pth"
     metrics = evaluate_model_on_split(model, 'val', device)
 
     ti.xcom_push(key="model_type", value="resnet")
     ti.xcom_push(key="model_path", value=model_path)
-    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
+    
+    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])
+    ti.xcom_push(key="precision", value=metrics["Precision"])
+    ti.xcom_push(key="recall", value=metrics["Recall"])
+    ti.xcom_push(key="f1_score", value=metrics["F1-Score"])
+    ti.xcom_push(key="auc_roc", value=metrics["AUC-ROC"])
+    ti.xcom_push(key="confusion_matrix", value=metrics["Confusion Matrix"])
+    
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
     ti.xcom_push(key="epochs", value=num_epochs)
-    ti.xcom_push(key="metrics", value=metrics)
 
     Variable.set("last_retrain_time", datetime.now().isoformat())
     logger.info(f"ResNet model and metrics saved. Path: {model_path}")
