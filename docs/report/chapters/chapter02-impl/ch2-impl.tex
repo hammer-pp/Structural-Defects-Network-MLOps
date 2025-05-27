@@ -1,0 +1,50 @@
+\chapter{Implementation}
+
+\section{Data Pre-processing}
+
+\subsubsection{Handling Class Imbalance}
+
+As the original SDNET dataset exhibits significant class imbalance, with non-cracked images comprising approximately 85\% of the data. To mitigate this issue and improve model sensitivity to cracks, two resampling strategies were applied:
+
+\begin{description}
+	\item[Balanced 50/50 dataset] Random undersampling matched the number of non-cracked images to the number of cracked images. This ensures equal representation and helps prevent model bias.
+	\item[Balanced 40/60 dataset] A less aggressive undersampling approach was used, setting a cracked-to-non-cracked ratio of 40:60. This retains more samples while reducing imbalance.
+\end{description}
+
+These resampled datasets allow for performance comparisons under different balance conditions, ensuring the model's robustness across varying class distributions.
+
+\subsection{Image Preprocessing}
+
+Before being fed into the model, images underwent several preprocessing steps aimed at enhancing their quality and diversity:
+
+\begin{description}
+	\item[Resizing] All images were resized to the same resolution for uniformity.
+	\item[Denoising] A mild blur was applied to reduce noise while preserving important features such as crack edges.
+	\item[Normalization] Pixel values were scaled to a standardized range to help the model learn more effectively.
+\end{description}
+
+These steps ensured that the input data was clean, consistent, and suitable for deep learning.
+
+\subsection{Data Augmentation}
+
+To enhance the robustness of the model and prevent overfitting, data augmentation techniques were applied to the training image, which included:
+
+\begin{description}
+	\item[Random horizontal flipping] to simulate mirrored crack patterns.
+	\item[Small-angle rotation $\pm 15\degree$] to mimic slight variations in camera angle.
+	\item[Brightness and contrast adjustments] to reflect differing lighting environments.
+\end{description}
+
+These augmentations simulate variations in lighting and camera angles, helping the model generalize better to new, unseen data.
+
+\subsection{Dataset Construction and Splitting}
+
+\subsection{EDA (Exploratory Data Analysis) findings}
+
+\subsection{Class Distribution by Surface Type}
+
+\subsection{Class Distribution Across Datasets}
+
+\subsection{Sample Images Overview}
+
+\clearpage
