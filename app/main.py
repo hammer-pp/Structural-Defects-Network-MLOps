@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 # Load model
 model = models.resnet18(pretrained=True)
 model.fc = torch.nn.Linear(model.fc.in_features, 2)  # adjust class count
-model.load_state_dict(torch.load("../model/resnet_best_params.pth", map_location="cpu"))
+model.load_state_dict(torch.load("model/prod.pth", map_location="cpu")) # test for the production unit only
 model.eval()
 
 # Preprocessing
@@ -27,7 +27,7 @@ transform = transforms.Compose([
 ])
 
 
-labels = ["Cracked", "Non-craked"]  # adjust to match your training
+labels = ["Non-cracked", "Cracked"]  # adjust to match your training (Thunder's notebook)
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request):
