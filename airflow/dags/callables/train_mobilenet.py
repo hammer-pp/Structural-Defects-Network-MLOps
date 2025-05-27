@@ -53,7 +53,7 @@ def train_mobilenet(**kwargs):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
-    num_epochs = 10
+    num_epochs = 1
     # Train model (returns best val F1)
     train(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs=num_epochs, save_path="/opt/airflow/model/mobilenet_model.pth")
 

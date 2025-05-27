@@ -86,7 +86,7 @@ with DAG(
         python_callable=log_model,
         op_kwargs={
             'model_type': 'resnet',
-            'train_task_id' : 'train_model_resnet'
+            'train_task_id' : 'ResNet_training'
         },
         trigger_rule='none_failed_min_one_success',
     )
@@ -96,7 +96,7 @@ with DAG(
         python_callable=log_model,
         op_kwargs={
             'model_type': 'mobilenet',
-            'train_task_id': 'train_model_mobilenet'
+            'train_task_id': 'MobileNet_training'
         },
         trigger_rule='none_failed_min_one_success',
     )
