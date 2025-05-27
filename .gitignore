@@ -87,10 +87,8 @@ temp/
 node_modules
 build
 npm-debug.log
+
 .DS_Store
 ./artifacts
 mlflow/
-node_modules
-build
-npm-debug.log
-.DS_Store
+
