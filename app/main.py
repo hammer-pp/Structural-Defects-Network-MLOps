@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,6 +7,37 @@ import torch
 from torchvision import models, transforms
 from PIL import Image
 import io
+import uuid, os
+from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
+
+load_dotenv()  # Load .env
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
+def upload_image_to_cloudinary(image_path: str, label: str):
+    """
+    Uploads image to Cloudinary under Users/{label}/<filename>
+    """
+    public_id = f"Users/{label}/{os.path.basename(image_path).split('.')[0]}"
+    try:
+        response = cloudinary.uploader.upload(
+            image_path,
+            public_id=public_id,
+            overwrite=True,
+            resource_type="image"
+        )
+        print("Feedback upload success to Cloudinary.")
+        return response["secure_url"]
+    except Exception as e:
+        print("❌ Upload to Cloudinary failed:", e)
+        return None
 
 app = FastAPI()
 
@@ -16,7 +47,7 @@ templates = Jinja2Templates(directory="templates")
 # Load model
 model = models.resnet18(pretrained=True)
 model.fc = torch.nn.Linear(model.fc.in_features, 2)  # adjust class count
-model.load_state_dict(torch.load("../model/resnet_best_params.pth", map_location="cpu"))
+model.load_state_dict(torch.load("model/prod.pth", map_location="cpu")) # test for the production unit only
 model.eval()
 
 # Preprocessing
@@ -27,7 +58,7 @@ transform = transforms.Compose([
 ])
 
 
-labels = ["Cracked", "Non-craked"]  # adjust to match your training
+labels = ["Non-cracked", "Cracked"]  # adjust to match your training (Thunder's notebook)
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request):
@@ -38,10 +69,61 @@ async def predict(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents)).convert("RGB")
     input_tensor = transform(image).unsqueeze(0)
+    
+    # Generate UUID-based filename
+    unique_id = uuid.uuid4().hex
+    ext = os.path.splitext(file.filename)[-1]
+    filename = f"{unique_id}{ext}"
+
+    # Save to temp path
+    temp_path = f"static/test/temp/{filename}"
+    os.makedirs("static/test/temp", exist_ok=True)
+    with open(temp_path, "wb") as buffer:
+        buffer.write(contents)
 
     with torch.no_grad():
         output = model(input_tensor)
         _, pred = torch.max(output, 1)
         prediction = labels[pred.item()]
 
-    return templates.TemplateResponse("index.html", {"request": request, "result": prediction})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "result": prediction,
+        "filename": filename,
+        "image_url": f"/{temp_path}"
+    })
+
+@app.post("/feedback", response_class=HTMLResponse)
+async def feedback(
+    request: Request,
+    filename: str = Form(...),
+    predicted_label: str = Form(...),
+    feedback: str = Form(...)
+):
+    src_path = f"static/test/temp/{filename}"
+
+    if feedback == "correct":
+        dst_label = predicted_label
+    else:
+        # Invert the binary label
+        dst_label = "no_crack" if predicted_label == "crack" else "crack"
+
+    dst_dir = f"static/test/confirmed/{dst_label}"
+
+    # For local marking 
+    # os.makedirs(dst_dir, exist_ok=True)
+    # dst_path = os.path.join(dst_dir, filename)
+    # os.rename(src_path, dst_path)
+    
+    # Upload to Cloudinary
+    cloudinary_url = upload_image_to_cloudinary(src_path, dst_label)
+
+    # Remove temp file after upload
+    os.remove(src_path)
+
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "result": f"Feedback recorded: {feedback.upper()}",
+        # "image_url": f"/{dst_path}"
+        "image_url" : cloudinary_url
+    })
