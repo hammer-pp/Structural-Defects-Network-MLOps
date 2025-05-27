@@ -16,7 +16,7 @@
 %
 % Memoir class loads useful packages by default (see manual).
 % a4paper => draft, legno => (removed, after 11pt), openbib => removed, after 11pt
-\documentclass[a4paper, 11pt, oneside]{memoir}
+\documentclass[a4paper, 12pt, oneside]{memoir}
 %add 'draft' to turn draft option on (see below)
 % Adding metadata:x
 
@@ -183,7 +183,7 @@
 \usepackage[english]{babel}		%For languages characters and hyphenation
 \usepackage{color}                    				%Creates coloured text and background
 \usepackage[colorlinks=true,
-		     allcolors=black]{hyperref}              %Creates hyperlinks in cross references
+		     allcolors=blue]{hyperref}              %Creates hyperlinks in cross references
 \usepackage{memhfixc}					%Must be used on memoir document
 									%class after hyperref
 \usepackage{enumerate}					%For enumeration counter
@@ -461,6 +461,8 @@
 \mainmatter
 %
  \import{chapters/chapter01-intro/}{ch1-intro.tex}
+ \import{chapters/chapter02-impl/}{ch2-impl.tex}
+ \import{chapters/chapter03-model/}{ch3-model.tex}
 % \import{chapters/chapter02-introduction/}{ch2-introduction.tex}
 % \import{chapters/chapter03-design/}{ch3-design.tex}
 % \import{chapters/chapter04-interface/}{ch4-UI.tex}
