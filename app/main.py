@@ -8,6 +8,36 @@ from torchvision import models, transforms
 from PIL import Image
 import io
 import uuid, os
+from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
+
+load_dotenv()  # Load .env
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
+def upload_image_to_cloudinary(image_path: str, label: str):
+    """
+    Uploads image to Cloudinary under Users/{label}/<filename>
+    """
+    public_id = f"Users/{label}/{os.path.basename(image_path).split('.')[0]}"
+    try:
+        response = cloudinary.uploader.upload(
+            image_path,
+            public_id=public_id,
+            overwrite=True,
+            resource_type="image"
+        )
+        print("Feedback upload success to Cloudinary.")
+        return response["secure_url"]
+    except Exception as e:
+        print("❌ Upload to Cloudinary failed:", e)
+        return None
 
 app = FastAPI()
 
@@ -80,12 +110,20 @@ async def feedback(
 
     dst_dir = f"static/test/confirmed/{dst_label}"
 
-    os.makedirs(dst_dir, exist_ok=True)
-    dst_path = os.path.join(dst_dir, filename)
-    os.rename(src_path, dst_path)
+    # For local marking 
+    # os.makedirs(dst_dir, exist_ok=True)
+    # dst_path = os.path.join(dst_dir, filename)
+    # os.rename(src_path, dst_path)
+    
+    # Upload to Cloudinary
+    cloudinary_url = upload_image_to_cloudinary(src_path, dst_label)
+
+    # Remove temp file after upload
+    os.remove(src_path)
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "result": f"Feedback recorded: {feedback.upper()}",
-        "image_url": f"/{dst_path}"
+        # "image_url": f"/{dst_path}"
+        "image_url" : cloudinary_url
     })
