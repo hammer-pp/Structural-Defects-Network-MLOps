@@ -91,7 +91,7 @@ This will generate `train/`, `val/`, and `test/` image folders + CSVs under `art
 
 ---
 
-## 🐳 Run with Docker + Airflow
+## 🐳 Run with Docker + Airflow + MLFlow
 
 ### 1. Add Environment Variables
 
@@ -103,11 +103,12 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 DATASET_PATH=<path>/<to>/your/projectStructural-Defects-Network-MLOps\Dataset
+MLFLOW_TRACKING_URI=http://mlflow:5000
 ```
 
 | _Reminder: this dataset path should be absolute path._
 
-### 2. Start Airflow
+### 2. Start Airflow + MLflow
 
 ```bash
 cd airflow
@@ -115,6 +116,8 @@ docker compose up -d --build
 ```
 
 Airflow UI → [http://localhost:8080](http://localhost:8080)
+MLFlow UI -> [http://localhost:5000](http://localhost:5000)
+
 **Username / Password**: `airflow` / `airflow`
 
 ### 3. Stop Airflow
@@ -124,16 +127,6 @@ docker compose down --volumes --rmi all
 ```
 
 ---
-
-## 📊 MLflow Tracking (Optional)
-
-### Start MLflow UI locally:
-
-```bash
-mlflow ui --port 5000
-```
-
-MLflow UI → [http://localhost:5000](http://localhost:5000)
 
 ### Logs from training tasks in Airflow will be registered automatically (ResNet, MobileNet).
 
