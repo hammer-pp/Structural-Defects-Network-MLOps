@@ -31,3 +31,5 @@ preprocess.ipynb
 */__pycache__
 
 logs
+
+./artifacts

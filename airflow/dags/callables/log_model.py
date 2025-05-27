@@ -20,10 +20,18 @@ def log_model(**kwargs):
     learning_rate = ti.xcom_pull(task_ids=train_task_id, key='learning_rate')
     epochs = ti.xcom_pull(task_ids=train_task_id, key='epochs')
     
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    if not all([model_path, accuracy, optimizer_name, learning_rate, epochs]):
+        raise ValueError("❌ One or more required XCom values are missing.")
+
+    mlflow_uri = os.getenv(os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000"))
+    logger.info(f'Set MLFLOW_TRACKING_URI to {mlflow_uri}')
+    mlflow.set_tracking_uri(mlflow_uri)
     
-    if model_path is None or not os.path.exists(model_path):
-        raise FileNotFoundError(f"❌ Model file not found at path: {model_path}")
+    logger.info(f"Checking model file at: {model_path}")
+    if not os.path.exists(model_path):
+        logger.error("❌ Model path does not exist inside container.")
+        raise FileNotFoundError(f"Model file not found at path: {model_path}")
+
     
     logger.info(f"📦 Logging {model_type} model to MLflow...")
 
@@ -38,15 +46,19 @@ def log_model(**kwargs):
     model.load_state_dict(torch.load(model_path, map_location='cpu'))
     model.eval()
 
-    with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
-        mlflow.pytorch.log_model(
-            pytorch_model=model,
-            artifact_path="model",
-            registered_model_name=f"{model_type.capitalize()}ConcreteCrackClassifierModel"
-        )
-        mlflow.log_metric("accuracy", accuracy)
-        mlflow.log_param("optimizer", optimizer_name)
-        mlflow.log_param("learning_rate", learning_rate)
-        mlflow.log_param("epochs", epochs)
+    try:
+        with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
+            mlflow.pytorch.log_model(
+                pytorch_model=model,
+                artifact_path="model",
+                registered_model_name=f"{model_type.capitalize()}ConcreteCrackClassifierModel"
+            )
+            mlflow.log_metric("accuracy", accuracy)
+            mlflow.log_param("optimizer", optimizer_name)
+            mlflow.log_param("learning_rate", learning_rate)
+            mlflow.log_param("epochs", epochs)
+    except Exception as e:
+        logger.exception(f"❌ MLflow logging failed: {e}")
+        raise
 
     logger.info("✅ Model and metadata logged to MLflow.")
