@@ -42,21 +42,26 @@ def log_model(**kwargs):
         model = get_mobilenet_model()
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
-
-    model.load_state_dict(torch.load(model_path, map_location='cpu'))
-    model.eval()
+    
+    
+    try:
+        model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=True))
+        model.eval()
+        logger.info("✅ Model loaded and set to eval mode successfully.")
+    except Exception as e:
+        logger.exception(f"❌ Failed to load model state dict or set eval mode: {e}")
+        raise
 
     try:
         with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
-            mlflow.pytorch.log_model(
-                pytorch_model=model,
-                artifact_path="model",
-                registered_model_name=f"{model_type.capitalize()}ConcreteCrackClassifierModel"
-            )
             mlflow.log_metric("accuracy", accuracy)
             mlflow.log_param("optimizer", optimizer_name)
             mlflow.log_param("learning_rate", learning_rate)
             mlflow.log_param("epochs", epochs)
+            mlflow.pytorch.log_model(
+                model,
+                artifact_path="model",
+            )
     except Exception as e:
         logger.exception(f"❌ MLflow logging failed: {e}")
         raise
