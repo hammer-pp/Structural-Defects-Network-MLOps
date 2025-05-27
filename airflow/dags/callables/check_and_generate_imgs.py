@@ -86,10 +86,10 @@ def check_and_generate_csv(**kwargs):
     else:
         logger.info("📄 No new records to append to CSV")
 
-    # if new_image_count >= 0:
-    #     logger.info(f"✅ Found {new_image_count} new images since last retrain → preprocessing.")
-    #     return 'preprocess_data'
-    # else:
-    #     logger.info(f"⏹ Only {new_image_count} new images found → skipping.")
-    #     return 'skip_training'
-    return 'preprocess_data'
+    if new_image_count >= 10:
+        logger.info(f"✅ Found {new_image_count} new images since last retrain → preprocessing.")
+        return 'preprocess_data'
+    else:
+        logger.info(f"⏹ Only {new_image_count} new images found → skipping.")
+        return 'skip_training'
+    # return 'preprocess_data'
