@@ -7,7 +7,10 @@ on:
     branches: [ main, master ]
 
 jobs:
-  mlops-ci:
+  # -------------------
+  # STAGE 1: CI - Lint, test, (optional) train
+  # -------------------
+  validate-and-train:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,9 +37,9 @@ jobs:
       run: |
         pytest tests/
 
-    - name: 🧠 Train Model (quick test)
-      run: |
-        python src/train.py --test-mode  # add a flag to run quick CI version
+    # - name: 🧠 Train Model (quick test)
+    #   run: |
+    #     python src/train.py --test-mode  # add a flag to run quick CI version
 
     - name: 📊 Run Evidently Drift Report (if needed)
       run: |
@@ -47,3 +50,38 @@ jobs:
       with:
         name: drift-report
         path: reports/data_drift.html
+
+     # -------------------
+  # STAGE 2: CD - Release model on tag or manual
+  # -------------------
+  release-model:
+    needs: [validate-and-train]
+    runs-on: ubuntu-latest
+    if: ${{ always() && (startsWith(github.ref, 'refs/tags/model-v') || github.event_name == 'workflow_dispatch') }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install MLflow
+      run: |
+        pip install mlflow torch torchvision
+
+    - name: Download Trained Model
+      uses: actions/download-artifact@v3
+      with:
+        name: trained-model
+        path: outputs/
+
+    - name: Register Model to MLflow
+      run: |
+        python scripts/register_model.py --path outputs/model.pth --name "MyImageClassifier"
+
+    - name: Promote to Production (optional)
+      run: |
+        python scripts/promote_model.py --model-name "MyImageClassifier" --stage "Production"
