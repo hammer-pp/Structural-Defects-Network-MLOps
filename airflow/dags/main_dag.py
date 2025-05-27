@@ -24,7 +24,6 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'start_date' : datetime(2025, 5, 15),
-    'schedule_interval': '@weekly',
 }
 
 with DAG(
@@ -33,6 +32,7 @@ with DAG(
     description='Retrain model when enough new data is available',
     catchup=False,
     tags=['concrete', 'dag'],
+    schedule_interval= '@weekly',
 ) as dag:
 
     start = EmptyOperator(task_id='start')
