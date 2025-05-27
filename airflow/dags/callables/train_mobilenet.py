@@ -64,11 +64,17 @@ def train_mobilenet(**kwargs):
     
     ti.xcom_push(key="model_type", value="mobilenet")
     ti.xcom_push(key="model_path", value=model_path)
-    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])  # or test
+    
+    ti.xcom_push(key="accuracy", value=metrics["Accuracy"])
+    ti.xcom_push(key="precision", value=metrics["Precision"])
+    ti.xcom_push(key="recall", value=metrics["Recall"])
+    ti.xcom_push(key="f1_score", value=metrics["F1-Score"])
+    ti.xcom_push(key="auc_roc", value=metrics["AUC-ROC"])
+    ti.xcom_push(key="confusion_matrix", value=metrics["Confusion Matrix"])
+    
     ti.xcom_push(key="optimizer", value="Adam")
     ti.xcom_push(key="learning_rate", value=optimizer.param_groups[0]['lr'])
     ti.xcom_push(key="epochs", value=num_epochs)
-    ti.xcom_push(key="metrics", value=metrics)
     
     Variable.set("last_retrain_time", datetime.now().isoformat())
     logger.info(f"MobileNet model and metrics saved. Path: {model_path}")

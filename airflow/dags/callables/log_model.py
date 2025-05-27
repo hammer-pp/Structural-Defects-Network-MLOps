@@ -15,7 +15,14 @@ def log_model(**kwargs):
 
     ti = kwargs["ti"]
     model_path = ti.xcom_pull(task_ids=train_task_id, key='model_path')
+    
     accuracy = ti.xcom_pull(task_ids=train_task_id, key='accuracy')
+    precision = ti.xcom_pull(task_ids=train_task_id, key='precision')
+    recall = ti.xcom_pull(task_ids=train_task_id, key='recall')
+    f1_score = ti.xcom_pull(task_ids=train_task_id, key='f1_score')
+    auc_roc = ti.xcom_pull(task_ids=train_task_id, key='auc_roc')
+    confusion_matrix = ti.xcom_pull(task_ids=train_task_id, key='confusion_matrix')
+    
     optimizer_name = ti.xcom_pull(task_ids=train_task_id, key='optimizer')
     learning_rate = ti.xcom_pull(task_ids=train_task_id, key='learning_rate')
     epochs = ti.xcom_pull(task_ids=train_task_id, key='epochs')
