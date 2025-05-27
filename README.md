@@ -108,7 +108,7 @@ MLFLOW_TRACKING_URI=http://mlflow:5000
 
 | _Reminder: this dataset path should be absolute path._
 
-### 2. Start Airflow + MLflow
+### 2. Start Airflow + MLflow + Web UI
 
 ```bash
 cd airflow
@@ -117,6 +117,13 @@ docker compose up -d --build
 
 Airflow UI → [http://localhost:8080](http://localhost:8080)
 MLFlow UI -> [http://localhost:5000](http://localhost:5000)
+
+```bash
+cd app
+docker compose up -d --build
+```
+
+Web UI -> [http://localhost:3000](http://localhost:3000)
 
 **Username / Password**: `airflow` / `airflow`
 
