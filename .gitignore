@@ -19,6 +19,8 @@ artifact_folder_old
 
 preprocess.ipynb
 
+data_visualize.ipynb
+
 .DS_Store
 
 */.ipynb_checkpoints
