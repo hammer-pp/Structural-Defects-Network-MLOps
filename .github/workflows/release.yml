@@ -1,0 +1,32 @@
+name: Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on tags like v1.0.0
+
+jobs:
+  release-models:
+    name: Release Pretrained Models
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Prepare model files
+        run: |
+          mkdir -p app/models
+          cp airflow/model/mobilenet_model.pth app/models/
+          cp airflow/model/resnet_model.pth app/models/
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          files: |
+            app/models/mobilenet_model.pth
+            app/models/resnet_model.pth
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

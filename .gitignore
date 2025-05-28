@@ -21,13 +21,9 @@ preprocess.ipynb
 
 data_visualize.ipynb
 
-.DS_Store
-
 */.ipynb_checkpoints
 */__pycache__
 preprocess.ipynb
-
-.DS_Store
 
 */.ipynb_checkpoints
 */__pycache__
@@ -87,3 +83,8 @@ _minted-Main/
 # test folder
 test/
 temp/
+
+node_modules
+build
+npm-debug.log
+.DS_Store
