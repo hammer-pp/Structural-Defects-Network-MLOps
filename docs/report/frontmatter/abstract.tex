@@ -1,19 +1,25 @@
 
 \chapter*{Abstract}
 
-\textit{TBD...Brief summary of the project: objective, method, dataset, key results and potential impact...}
+%\textit{TBD...Brief summary of the project: objective, method, dataset, key results and potential impact...}
+%
+%\textit{200 - 250 words}
 
-\textit{200 - 250 words}
+%\begin{itemize}
+%	\item \textit{Problem Statement (Structural Defects Network)}
+%	\item \textit{Data Collection (Kaggle, ... Any other data source)}
+%	\item \textit{Train/Test (80-20, 70-30, 60-40)}
+%	\item \textit{Evaluation Metrics (Optuna tuning), F1 metrics}
+%	\item \textit{Results (e.g. We achieved 75\% F1 score on val dataset with ResNet-18)}
+%	\item \textit{Fast API, Containerized Model}
+%\end{itemize}
 
-\begin{itemize}
-	\item \textit{Problem Statement (Structural Defects Network)}
-	\item \textit{Data Collection (Kaggle, ... Any other data source)}
-	\item \textit{Train/Test (80-20, 70-30, 60-40)}
-	\item \textit{Evaluation Metrics (Optuna tuning), F1 metrics}
-	\item \textit{Results (e.g. We achieved 75\% F1 score on val dataset with ResNet-18)}
-	\item \textit{Fast API, Containerized Model}
-\end{itemize}
+In the wake of recent earthquakes, the need for rapid and accurate structural damage assessment has grown more urgent. This project introduces an end-to-end MLOps pipeline for automating the detection of cracks in concrete surfaces using deep learning techniques. Leveraging the publicly available SDNET2018 dataset from Kaggle, which comprises over 56,000 labeled images of cracked and non-cracked concrete, the team developed and compared several classification models, including a custom CNN, ResNet-18, and MobileNetV3.
 
-\textbf{Keywords}: \textit{Coming soon...}
+The dataset was split into training, validation, and test sets using 70-15-15 and 60-40 strategies, while addressing class imbalance through undersampling. Extensive image preprocessing and augmentation enhanced model robustness. Hyperparameter tuning was conducted using Optuna, and Soft F1 Loss was adopted to better handle class imbalance. Among all models, the ResNet-18 with optimized parameters achieved a validation F1-score of 0.7559, while MobileNetV3 reached a test accuracy of 91\% and an F1-score of 0.75 under a mildly imbalanced configuration.
+
+The system was deployed using FastAPI and containerized via Docker, with CI/CD support from GitHub Actions. User feedback was incorporated into a continuous learning loop managed by Apache Airflow and MLflow. This integration of AI and DevOps not only streamlines real-world deployment but also enables scalable, adaptive infrastructure monitoring. The project lays a foundation for future enhancements such as drift detection and object-level crack localization.
+
+\textbf{Keywords}: \textit{Crack Detection, ResNet-18, MobileNetV3, MLOps, SDNET2018, Image Classification, FastAPI, Docker, Airflow, MLflow, CI/CD, Concrete Health Monitoring}
 
 \clearpage
