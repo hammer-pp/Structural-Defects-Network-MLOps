@@ -71,6 +71,8 @@ Structural-Defects-Network-MLOps/
 │   │   └── callables/        # All python callables function in main dag
 │   ├── config/               # airflow.cfg and other configs
 │   ├── plugins/              # Airflow plugins (if needed)
+|   ├── mlflow/               # MLflow artifacts folder (will be created after run)
+|   ├── model/                # local shared volume for saving models
 │   ├── logs/                 # Airflow logs
 │   ├── Dockerfile            # Custom Image for this project
 │   └── docker-compose.yaml   # Docker Compose for Airflow stack

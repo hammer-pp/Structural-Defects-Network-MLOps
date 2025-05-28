@@ -68,6 +68,7 @@ def log_model(**kwargs):
             mlflow.pytorch.log_model(
                 model,
                 artifact_path="model",
+                # registered_model_name="{model_type}-{accuracy}"
             )
     except Exception as e:
         logger.exception(f"❌ MLflow logging failed: {e}")
