@@ -20,4 +20,8 @@
 
 \subsection{Unit testing and Linting}
 
+\subsection{Drift detection}
+
+Being centered on goals of industrial grade MLOps pipeline, which is the develop ML products and rapidly brind them into production \cite{kreuzberger2022machinelearningoperationsmlops}, we considered human in the loop process to continuously update the quality of the model. Hence, we do not have enough user feedback to be alarmed to monitor drift in the model since it is very niche area of ML application (civil/structural engineering). Primary kinds of drifts include concept drift, data drift (due to user data), label and feature drift. In the first phase, we have implemented monitoring of data and model performance. To ensure model remains effective over time, number of corrected labels can be taken into consideration to decide how frequently drift detection should be exercised. As of now, we have Evidently AI as strong choice for model monitoring and drift detection. For the scope of this project, it is omitted and redacted from the documentation considering project goals and development time constraints.
+
 \clearpage

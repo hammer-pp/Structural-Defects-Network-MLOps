@@ -3,6 +3,15 @@
 An end-to-end MLOps pipeline for detecting concrete structural cracks using deep learning (ResNet and MobileNet) with PyTorch, Airflow for orchestration, and MLflow for experiment tracking.
 In addition, we support
 
+## Problem Statment
+
+As the recent earthquake in Thailand caused significant structural damage, particularly to high-rise buildings which led to widespread concrete cracking and breakage. Therefore, the need for efficient and reliable damage assessment has become more critical than ever. Structural defects such as cracks and spalling not only undermine the integrity of infrastructure but also pose serious risks to public safety if not detected and repaired promptly
+
+This project proposes an AI-powered defect detection system that leverages deep learning to automate the identification and localization of structural damage from images. By utilizing pre-trained models such as ResNet, EfficientNet and MobileNetV3.
+The system classifies images as either cracked or non-cracked and applies object detection techniques for precise localization. This approach not only improves the speed and accuracy of structural assessments but also supports engineers and decision-makers in prioritizing repairs, ultimately enhancing infrastructure resilience after natural disasters.
+
+In order to implement this project, we use the dataset from Kaggle (URL: https://www.kaggle.com/datasets/aniruddhsharmastructural-defects-network-concrete-crack-images). This dataset is called "Structural Defects Network (SDNET) 2018".
+
 ---
 
 ## 🔧 Prerequisites
