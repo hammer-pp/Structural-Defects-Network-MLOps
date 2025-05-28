@@ -64,7 +64,7 @@ Faster R-CNN is especially suitable for crack detection in concrete because it c
 
 \section{Model training and Implementation}
 
-To develop a robust crack detection system, we employed deep convolutional neural networks using the PyTorch framework. The implementation leverages both pre-trained architectures—ResNet and MobileNetV3—to enable transfer learning and improve classification accuracy with limited training data.
+To develop a robust crack detection system, we employed deep convolutional neural networks using the PyTorch framework. The implementation leverages both pre-trained architectures ResNet and MobileNetV3 to enable transfer learning and improve classification accuracy with limited training data.
 
 \subsection{Libraries and Tools Used}
 
@@ -637,7 +637,7 @@ Moreover, The F1-score was 0.7513 and it can demonstrate the better harmony betw
 	\label{tab:performance_mobilenet}
 \end{table}
 
-In conclusion, while the 50:50 model focused on finding as many cracks as possible. But it still made more mistakes by wrongly labeling non-cracked images as cracked. This happened because it didn’t see enough examples of non-cracked images during training. On the other hand, the 40:60 model had a better mix of cracked and non-cracked images which can enhance the performance of the model and it makes more accurate predictions with fewer false alarms. Therefore, we can conclude that the 40:60 configuration is more suitable for deployment in real-life structural inspections, especially in high-stakes post-disaster scenarios. These findings underscore the importance of choosing training strategies that can reflect real-world class distributions and evaluation metrics aligned with deployment goals to ensure dependable performance in mission-critical applications.
+In conclusion, while the 50:50 model focused on finding as many cracks as possible. But it still made more mistakes by wrongly labeling non-cracked images as cracked. This happened because it didn't see enough examples of non-cracked images during training. On the other hand, the 40:60 model had a better mix of cracked and non-cracked images which can enhance the performance of the model and it makes more accurate predictions with fewer false alarms. Therefore, we can conclude that the 40:60 configuration is more suitable for deployment in real-life structural inspections, especially in high-stakes post-disaster scenarios. These findings underscore the importance of choosing training strategies that can reflect real-world class distributions and evaluation metrics aligned with deployment goals to ensure dependable performance in mission-critical applications.
 
 
 \section{Overfitting Analysis}
@@ -647,7 +647,7 @@ This overfitting can be justified, given that the models will be retrained with 
 
 
 \section{Conclusion}
-Based on the comprehensive evaluation of the classification models, we have identified clear deployment candidates that demonstrate robust performance across both balanced and imbalanced dataset configurations. Among the architectures tested, ResNet and MobileNetV3 consistently outperformed the Custom CNN, particularly in terms of F1-score, precision, and generalization to unseen data. Their superior results were achieved after extensive hyperparameter tuning and strategic dataset balancing, which enhanced the models’ ability to capture the complex visual features necessary for reliable crack detection.
+Based on the comprehensive evaluation of the classification models, we have identified clear deployment candidates that demonstrate robust performance across both balanced and imbalanced dataset configurations. Among the architectures tested, ResNet and MobileNetV3 consistently outperformed the Custom CNN, particularly in terms of F1-score, precision, and generalization to unseen data. Their superior results were achieved after extensive hyperparameter tuning and strategic dataset balancing, which enhanced the model's ability to capture the complex visual features necessary for reliable crack detection.
 
 For ResNet, the optimized 50:50 training configuration produced a strong balance between sensitivity and precision, achieving an F1-score of 0.74 and an AUC-ROC of 0.93, making it well-suited for applications where both false positives and false negatives must be minimized. Meanwhile, the 40:60 configuration, while offering slightly higher recall (0.84) and AUC-ROC (0.94), did so at the expense of precision, suggesting a higher false alarm rate. Nevertheless, both configurations performed competitively and provide deployment-ready reliability depending on specific use-case priorities.
 
