@@ -8,7 +8,6 @@ from torchvision import models, transforms
 from PIL import Image
 import io
 import uuid, os
-
 from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
@@ -48,7 +47,7 @@ templates = Jinja2Templates(directory="templates")
 # Load model
 model = models.resnet18(pretrained=True)
 model.fc = torch.nn.Linear(model.fc.in_features, 2)  # adjust class count
-model.load_state_dict(torch.load("model/prod.pth", map_location="cpu")) # test for the production unit only
+model.load_state_dict(torch.load("model/best_model.pth", map_location="cpu")) # test for the production unit only
 model.eval()
 
 # Preprocessing
@@ -58,6 +57,33 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+MODEL_DIR = "model"
+AVAILABLE_MODELS = {
+    "resnet": os.path.join(MODEL_DIR, "resnet_model.pth"),
+    "mobilenet": os.path.join(MODEL_DIR, "mobilenet_model.pth"),
+    "best": os.path.join(MODEL_DIR, "best_model.pth")
+}
+
+MODEL_LABELS = ["Non-cracked", "Cracked"]
+
+def load_model(model_name: str):
+    if model_name == "resnet":
+        net = models.resnet18()
+        net.fc = torch.nn.Linear(net.fc.in_features, 2)
+    elif model_name == "mobilenet":
+        net = models.mobilenet_v3_large()
+        net.classifier[1] = torch.nn.Linear(net.fc.in_features, 2)
+    elif model_name == "best":
+        net = models.resnet18()
+        net.fc = torch.nn.Linear(net.fc.in_features, 2)
+    else:
+        raise ValueError("Unknown model")
+
+    state_path = AVAILABLE_MODELS[model_name]
+    net.load_state_dict(torch.load(state_path, map_location="cpu"))
+    net.eval()
+    return net
+
 
 labels = ["Non-cracked", "Cracked"]  # adjust to match your training (Thunder's notebook)
 
@@ -66,7 +92,9 @@ async def form(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "result": None})
 
 @app.post("/", response_class=HTMLResponse)
-async def predict(request: Request, file: UploadFile = File(...)):
+async def predict(request: Request, file: UploadFile = File(...), model_name: str = Form(...)):
+    model = load_model(model_name)
+    
     contents = await file.read()
     image = Image.open(io.BytesIO(contents)).convert("RGB")
     input_tensor = transform(image).unsqueeze(0)
@@ -91,7 +119,8 @@ async def predict(request: Request, file: UploadFile = File(...)):
         "request": request,
         "result": prediction,
         "filename": filename,
-        "image_url": f"/{temp_path}"
+        "image_url": f"/{temp_path}",
+        "selected_model": model_name
     })
 
 @app.post("/feedback", response_class=HTMLResponse)

@@ -89,3 +89,6 @@ test/
 temp/
 
 mlflow/
+node_modules/
+build/
+.svelte-kit/
