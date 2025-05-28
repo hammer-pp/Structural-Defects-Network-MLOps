@@ -62,6 +62,10 @@ After running the preprocessing script:
 The train, test, and validation datasets will be saved inside the artifact_folder/ directory.
 The artifact_folder/ is excluded from version control and will not be uploaded to Git (as specified in .gitignore).
 
+---
+
+## 🏢 Project Structure
+
 ```kotlin
 Structural-Defects-Network-MLOps/
 ├── Dataset/                  # Raw Data (Decks, Walls, Pavements)
@@ -130,6 +134,8 @@ Airflow UI → [http://localhost:8080](http://localhost:8080)
 MLFlow UI -> [http://localhost:5000](http://localhost:5000)
 
 **Username / Password**: `airflow` / `airflow`
+
+With this airflow and mlflow, you can run whole our Structural Defect Machine Learning Pipeline in our airflow and monitor model performance and parameters in MLFlow instantly.
 
 ### 3. Stop Airflow
 
