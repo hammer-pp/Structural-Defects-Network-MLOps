@@ -28,7 +28,7 @@ A main DAG (\texttt{crack\_cnn\_training\_pipeline}) coordinates tasks like:
 	\item Checking new images (Figure \ref{fig:coudinary}) from S3 Cloudinary for new user images in the system.
 	\item Data preparation and preprocess. (Figure \ref{fig:prep})
 	\item Parallel model training (Figure \ref{fig:train}) or series model training (Figure \ref{fig:train2}) for different resources. 
-	\item Evaluation and logging to MLflow.
+	\item Evaluation and logging to MLflow (Figure \ref{fig:eval})
 \end{itemize}
 
 \begin{figure}
@@ -57,6 +57,13 @@ A main DAG (\texttt{crack\_cnn\_training\_pipeline}) coordinates tasks like:
 	\includegraphics[height=0.15\textheight]{./trainee2.png}
 	\caption{Model training pipeline (series mode)}
 	\label{fig:train2}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.16\textheight]{./eval.png}
+	\caption{Evaluation and logging to MLFlow}
+	\label{fig:eval}
 \end{figure}
 
 We also utilized Celery and Flower tools. Celery Executor used for scaling out by distributing the workload to multiple Celery workers that can run on different \texttt{machinesFlower} is a web based tool for monitoring and administering Celery clusters. Flower can be enable by passing \texttt{profile flower} option (e.g., \texttt{docker compose up - profile flower up}). This makes the project scalable, parallelized training and distribution. Custom Python Operator tasks manage logic with inter-task communication via \texttt{XCom}. For example, we parsed all metrics and values from training operator to logging operator via \texttt{XCom}. Moreover, in each operators, we provide a log for monitoring.
