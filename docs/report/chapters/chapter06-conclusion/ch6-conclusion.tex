@@ -1,11 +1,45 @@
-\chapter{Findings and Conclusions}
+\chapter{Findings and Discussions}
 
 \section{Findings}
 
+The developed system demonstrates an effective integration of image classification, user feedback, and automated machine learning pipelines to enhance surface crack detection in concrete. By involving users in the feedback loop, the system ensures real-world adaptability while minimizing the need for manual relabeling. Performance across various models: ResNet, MobileNet, and Custom CNN shows that:
+
+\begin{enumerate}
+	\item Pretrained architectures like ResNet and MobileNet significantly outperform lightweight custom models, especially under imbalanced data.
+	\item User corrections effectively enable the accumulation of high-quality labeled data, improving model robustness over time.
+	\item The deployment of Airflow and MLflow provides a scalable foundation for continuous retraining and experiment tracking.
+\end{enumerate}
+
 \section{Conclusions}
+
+This project establishes a full-stack MLOps pipeline capable of:
+
+\begin{enumerate}
+	\item Real-time crack detection via a FastAPI + Jinja web interface.
+	\item Collecting and incorporating user feedback as labeled training data.
+	\item Automatically triggering model retraining through Airflow when new data thresholds are met.
+	\item Tracking model experiments and managing performance history via MLflow.
+\end{enumerate}
+
+By closing the feedback loop, the system transforms passive predictions into an active learning pipeline—reducing dataset staleness, improving model accuracy, and enabling data-centric AI development.
 
 \subsection{Limitations}
 
+Despite promising results, few limitations were observed:
+
+\begin{itemize}
+	\item The system relies on user honesty for label correction, which may introduce noise.
+	\item Model drift monitoring is not built-in to encounter the first limitation, this shall be the part of future work.
+	\item The system currently supports binary classification (cracked vs non-cracked) and assumes minimal variance in image context.
+\end{itemize}
+
 \subsection{Future works}
+
+The system can be extended in a few ways:
+
+\begin{itemize}
+	\item Introduce drift monitoring and eventually replace current log based analytic (feedback loop) to detect drifts or anomalies.
+	\item We haven't successfully tested detection using bounding box in our model (Faster R-CNN) yet, this could allow users to upload images in varied dimensions.
+\end{itemize}
 
 \clearpage

@@ -1,27 +1,84 @@
 \chapter{Workflow Orchestration}
 
-\section{Apache Airflow}
+To manage the end-to-end machine learning pipeline, Apache Airflow was used as the primary workflow orchestration tool. Our group transitioned from a Jupyter Notebook-based prototype to a modular, production-ready DAG based orchestration system.
 
-\section{Model Experiment Tracking MLFlow}
+\section{Jupyter to Airflow migration}
 
-\textit{TODO: Explain the evaluation results with comparison (use the param logs from MLFlow)}
+Refactored original Jupyter code into modular Python scripts (callables), separating concerns such as S3 image loading,data loading and preprocessing, model training, evaluation, Mlflow logging. This ensured each callable is reusable, testable, and easy to fix. We adopted clear naming conventions, parameterization, layers, and logging throughout.
 
-\subsection{Monitoring metrics}
+\subsection{DAG Structure and Execution}
 
-\textit{TODO: monitoring metrics}
+A main DAG (\texttt{crack\_cnn\_training\_pipeline}) coordinates tasks like:
 
-\section{Integration with Deployment}
+\begin{itemize}
+	\item Checking new images from S3 Cloudinary for new user images in the system.
+	\item Data preparation and preprocess.
+	\item Parallel model training or series model training for different resources.
+	\item Evaluation and logging to MLflow.
+\end{itemize}
 
-\subsection{GitHub Actions}
+We also utilized Celery and Flower tools. Celery Executor used for scaling out by distributing the workload to multiple Celery workers that can run on different \texttt{machinesFlower} is a web based tool for monitoring and administering Celery clusters. Flower can be enable by passing \texttt{profile flower} option (e.g., \texttt{docker compose up - profile flower up}). This makes the project scalable, parallelized training and distribution. Custom Python Operator tasks manage logic with inter-task communication via \texttt{XCom}. For example, we parsed all metrics and values from training operator to logging operator via \texttt{XCom}. Moreover, in each operators, we provide a log for monitoring.
 
-\textit{TODO: Workflow I -> build Svelte App}
+\subsection{Fully deployed workflow}
 
-\textit{TODO: Workflow II -> promote model on versioning}
+\begin{itemize}
+	\item The pipeline is containerized using Docker Compose and runs consistently across environments.
+	\item All Airflow Components (scheduler, webserver, worker, etc.) are all capable for production deployment, running in coordinated services.
+	\item DAGS run automatically on schedule (weekly) for batch continuous learning of the model, with integrated health checks, logs, and retries.
+	\item MLflow logging in integrated as part of the pipeline (as mentioned above in Experiment tracking topic)
+\end{itemize}
 
-\subsection{Unit testing and Linting}
+\subsection{Clean Code and Organization}
 
-\subsection{Drift detection}
+For best practices, we modularized all the codes with directory structure, as presented in figure \ref{fig:apache_airflow_file_order}.
 
-Being centered on goals of industrial grade MLOps pipeline, which is the develop ML products and rapidly brind them into production \cite{kreuzberger2022machinelearningoperationsmlops}, we considered human in the loop process to continuously update the quality of the model. Hence, we do not have enough user feedback to be alarmed to monitor drift in the model since it is very niche area of ML application (civil/structural engineering). Primary kinds of drifts include concept drift, data drift (due to user data), label and feature drift. In the first phase, we have implemented monitoring of data and model performance. To ensure model remains effective over time, number of corrected labels can be taken into consideration to decide how frequently drift detection should be exercised. As of now, we have Evidently AI as strong choice for model monitoring and drift detection. For the scope of this project, it is omitted and redacted from the documentation considering project goals and development time constraints.
+\begin{figure}
+	\centering
+	\includegraphics[height=0.5\textheight]{./files.png}
+	\caption[Datasets sample overview]{Datasets sample overview}
+	\label{fig:apache_airflow_file_order}
+\end{figure}
+
+This ensured separation of concerns, readable \texttt{docstrings}, and consistent naming. we used \texttt{.env} variables and airflow configs for portability, security and scalability.
+
+\section{Model Experiment Tracking using MLFlow}
+
+In this project, MLflow is used for managing machine learning experiment tracking. MLflow provides a centralized interface to log, visualize, and compare different training runs systematically.
+
+Key Features used:
+
+\begin{description}
+	\item[Tracking URI] MLflow tracking server was hosted as a Docker container and accessed via the URI \url{http://mlflow:5000}. This Docker container is network-accessible within the Airflow service. This custom image contains a fully production airflow pipeline and MLflow ready. By running the code below, both Airflow and MLflow will be accessible via \texttt{localhost:8000} and \texttt{localhost:5000} respectively. To build, simply \texttt{cd airflow} and \texttt{docker compose up -d --build}.
+	\item[Logging Parameters] Hyperparameters such as optimizer type, learning rate, and number of epochs were logged using \texttt{mlflow.log\_param()}.
+	\item[Logging Metrics] Model metric, such as accuracy, F1, confusion matrix and more, was logged for each experiment using \texttt{mlflow.log\_metric()}.
+	\item[Model Artifact Logging] Trained models were saved locally using mlflow.pytorch.log\_model() with or without registering them in the Model Registry. Artifacts were stored in the shared \texttt{/mlflow/artifacts} volume, making it easy to inspect and load models across containers. Although we experienced limitations using the model registry REST endpoint (\texttt{/api/2.0/preview/mlflow/registered-models/create}) in this deployment context, the pipeline and MLflow logging are structured to support easy future integration once the endpoint is fully supported by the MLflow server image used.
+\end{description}
+
+\begin{lstlisting}[language=Python]
+# Example (when enabling model registry)
+mlflow.pytorch.log_model(
+	model,
+	artifact_path="model",
+	# registered_model_name="{model_type}-{accuracy}" 
+	# Uncomment for model registry
+)
+
+\end{lstlisting}
+
+\subsection{Experiment Lifecycle}
+
+\begin{enumerate}
+	\item Models (i.e., ResNet, MobileNet) were trained with varying configurations and hyparameter-tuned via \texttt{optuna}.
+	\item During each DAG run in Apache Airflow, a \texttt{log\_model} task handled the MLflow logging for both model.
+	\item Each run is uniquely identified and can be viewed and compared through MLflow web UI. (\texttt{MLFlow image})
+	\item Logged models and their metadata are stored for reproducibility and future inference.
+\end{enumerate}
+
+Benefits of doing it this way include:
+\begin{itemize}
+	\item Centralized tracking of all model training experiments.
+	\item Easy comparison of different architecture and hyperparameter configurations.
+	\item Reproducibility, enabling reruns or deployment of previously trained models.
+\end{itemize}
 
 \clearpage

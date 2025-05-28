@@ -1,10 +1,17 @@
 \chapter{ML Model Deployment}
 
-\textit{TODO: Deployment strategies}
+To serve the trained deep learning models for inference, we designed a containerized deployment workflow using FastAPI and Docker. This deployment is currently set up to run locally but is structured to be cloud-ready (e.g., AWS, Hugging Face Spaces, or Kubernetes). Therefore, the ecosystem can be scaled horizontally, vertically or deployed with CDN based on traffic, however we can safely anticipate the tool is most likely be used in lab environment by select structural engineering experts. Therefore, local deployment will be sufficient for the time being.
 
-\section{FastAPI}
+\section{Deployment Architecture}
 
 Figure \ref{fig:demo_run} represents the user interface where they can upload the image and provide feedback back to developers through the loop.
+
+\begin{description}
+	\item[\textbf{\texttt{FastAPI}}] Python based backend service that can load and serve the models.
+	\item[Docker] The FastAPI app is containerized using Docker. The model file, inference code, and model monitoring and workflow orchestration are bundled into another image for reproducibility and ease of deployment.
+	\item[Shared Volume] The model used for inference is saved in a Docker volume (/model) shared between airflow and the deployment container, enabling seam-less hand-off from training to deployment. This is executed in CI/CD pipeline to pull models from airflow shared folder to app folder.
+	\item[Integration with MLFlow] The FastAPI service could be extended to dynamically load models from MLflow artifact store or Model Registry, based on versioning. However, this action is performed using GitHub Action CI/CD during versioned releases.
+\end{description}
 
 \begin{figure}
 	\centering
@@ -15,7 +22,181 @@ Figure \ref{fig:demo_run} represents the user interface where they can upload th
 
 \section{Containerization}
 
-\section{Prospects for Scalability}
+We have individual container setup for the Airflow + MLFlow and the Web app that ships with the freshly released model.
+
+Here's a Dockerfile example we've used in this run. Simply builds a web app that ships with Front End (FastAPI + Jinja).
+
+\begin{lstlisting}[language=Python]
+# Base image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy code and the model within
+COPY . .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the port
+EXPOSE 8000
+
+# Run FastAPI app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+\end{lstlisting}
+
+\section{Integration with Deployment}
+
+Figure \ref{fig:system} represents how the entire MLOps project is being carried out. Each block represents a Docker container, while Cloudinary is a 3rd party storage service. User performs inferencing and log is saved on the Cloudinary storage service. Airflow periodically take the newly created artifact the fine tune the model during second run.
+
+This diagram outlines an end-to-end continuous learning workflow for a crack detection system using FastAPI, Cloudinary, and Apache Airflow. 
+
+Imagine a user visiting your crack detection web application, where they upload an image of a concrete surface - maybe a photo of a cracked wall, a weathered pavement, or a structure at risk.
+
+As the user submits the image through the web browser, it's received by the server, which quickly runs it through the current best-performing deep learning model - perhaps a ResNet or a MobileNet variant trained for surface crack detection. The server returns a prediction, identifying whether the image shows a cracked or non-cracked surface. But here’s where the human-in-the-loop intelligence shines: the user is not just a passive observer. If the prediction is incorrect, they can correct it, helping label the image with the true class.
+
+Once corrected and confirmed, the newly labeled image is stored—uploaded to a Cloudinary S3 bucket that acts as a centralized training repository.
+
+Apache Airflow is tasked with periodically checking the Cloudinary store via an API. It looks for new, user-labeled data. When it detects that a threshold has been met—say, at least 10 new labeled images—it automatically triggers a retraining pipeline. This pipeline starts with preprocessing the data, ensuring that it’s clean, resized, and ready for ingestion. Then the model retrains, learning from the new examples, refining its internal weights to better understand real-world imperfections.
+
+As training progresses, every experiment is meticulously tracked using MLflow. Accuracy, precision, recall—all logged. If the new model shows an improvement, it proceeds to deployment, replacing the old version on the server.
+
+In this way, the system continuously evolves. Each user contribution not only improves individual predictions but enriches the global model. Thing that started as a simple upload becomes a part of an intelligent, adaptive loop - connecting user insight, cloud storage, and automated learning pipelines, all seamlessly put together.
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.8\textheight]{./system.png}
+	\caption{Complete MLFlow System}
+	\label{fig:system}
+\end{figure}
+
+\section{GitHub Actions for CI}
+
+\subsection{Model selection from MLFlow for new release}
+
+When new version needs to be tagged using Git, the CI pipeline will automatically pick the best model prepared using AirFlow+MLFlow side into the app container. The \texttt{.pth} serialized files are quite lightweight enought to move across when we release new versions of the models.
+
+\begin{lstlisting}[language=Python]
+name: Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on tags like v1.0.0
+
+jobs:
+  release-models:
+    name: Release Pretrained Models
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Prepare model files
+        run: |
+          mkdir -p app/models
+          cp airflow/model/mobilenet_model.pth app/models/
+          cp airflow/model/resnet_model.pth app/models/
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          files: |
+            app/models/mobilenet_model.pth
+            app/models/resnet_model.pth
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+\end{lstlisting}
+
+\subsection{Building front-end}
+
+One of the classic use-case of CI, we used it to build Svelte-Kit front-end for our application.
+
+\begin{lstlisting}[language=Python]
+name: Build Svelte Frontend (with Bun)
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-build.yml"
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+
+      - name: Verify Bun
+        run: bun --version
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: bun run build
+
+      - name: Copy to FastAPI static folder
+        run: |
+          mkdir -p ../app/static
+          cp -r build/* ../app/static/
+
+\end{lstlisting}
+
+\subsection{Unit testing and Linting}
+
+To ensure code quality, linting is done on select folder for the Python code to maintain readability.
+\begin{lstlisting}[language=Python]
+name: Lint Python
+
+on:
+  push:
+    paths:
+      - '**.py'
+  pull_request:
+    paths:
+      - '**.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff (lint only one file/folder)
+        run: ruff app/main.py  # Change to target specific file or directory
+
+\end{lstlisting}
+
+\section{Drift detection}
+
+Being centered on goals of industrial grade MLOps pipeline, which is the develop ML products and rapidly brind them into production \cite{kreuzberger2022machinelearningoperationsmlops}, we considered human in the loop process to continuously update the quality of the model. Hence, we do not have enough user feedback to be alarmed to monitor drift in the model since it is very niche area of ML application (civil/structural engineering). Primary kinds of drifts include concept drift, data drift (due to user data), label and feature drift. In the first phase, we have implemented monitoring of data and model performance. To ensure model remains effective over time, number of corrected labels can be taken into consideration to decide how frequently drift detection should be exercised. As of now, we have Evidently AI as strong choice for model monitoring and drift detection. For the scope of this project, it is omitted and redacted from the documentation considering project goals and development time constraints.
+
 
 
 \clearpage
