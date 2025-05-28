@@ -55,7 +55,7 @@ This diagram outlines an end-to-end continuous learning workflow for a crack det
 
 Imagine a user visiting your crack detection web application, where they upload an image of a concrete surface - maybe a photo of a cracked wall, a weathered pavement, or a structure at risk.
 
-As the user submits the image through the web browser, it's received by the server, which quickly runs it through the current best-performing deep learning model - perhaps a ResNet or a MobileNet variant trained for surface crack detection. The server returns a prediction, identifying whether the image shows a cracked or non-cracked surface. But here’s where the human-in-the-loop intelligence shines: the user is not just a passive observer. If the prediction is incorrect, they can correct it, helping label the image with the true class.
+As the user submits the image through the web browser, it's received by the server, which quickly runs it through the current best-performing deep learning model - perhaps a ResNet or a MobileNet variant trained for surface crack detection. The server returns a prediction, identifying whether the image shows a cracked or non-cracked surface. But here's where the human-in-the-loop intelligence shines: the user is not just a passive observer. If the prediction is incorrect, they can correct it, helping label the image with the true class.
 
 Once corrected and confirmed, the newly labeled image is stored—uploaded to a Cloudinary S3 bucket that acts as a centralized training repository.
 
