@@ -6,16 +6,58 @@ To manage the end-to-end machine learning pipeline, Apache Airflow was used as t
 
 Refactored original Jupyter code into modular Python scripts (callables), separating concerns such as S3 image loading,data loading and preprocessing, model training, evaluation, Mlflow logging. This ensured each callable is reusable, testable, and easy to fix. We adopted clear naming conventions, parameterization, layers, and logging throughout.
 
+\begin{figure}
+	\centering
+	\includegraphics[height=0.35\textheight]{./newDAG.png}
+	\caption{Workflow organization using DAG}
+	\label{fig:newDAG}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.3\textheight]{./newDAG2.png}
+	\caption{Task Scheduling using Airflow}
+	\label{fig:newDAG2}
+\end{figure}
+
 \subsection{DAG Structure and Execution}
 
 A main DAG (\texttt{crack\_cnn\_training\_pipeline}) coordinates tasks like:
 
 \begin{itemize}
-	\item Checking new images from S3 Cloudinary for new user images in the system.
-	\item Data preparation and preprocess.
-	\item Parallel model training or series model training for different resources.
+	\item Checking new images (Figure \ref{fig:coudinary}) from S3 Cloudinary for new user images in the system.
+	\item Data preparation and preprocess. (Figure \ref{fig:prep})
+	\item Parallel model training (Figure \ref{fig:train}) or series model training (Figure \ref{fig:train2}) for different resources. 
 	\item Evaluation and logging to MLflow.
 \end{itemize}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.2\textheight]{./cloudie.png}
+	\caption{Uploaded images from users in Cloudinary S3}
+	\label{fig:coudinary}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.25\textheight]{./prepie.png}
+	\caption{Data preparation and preprocess}
+	\label{fig:prep}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.2\textheight]{./trainee.png}
+	\caption{Model training pipeline (parallel mode)}
+	\label{fig:train}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.15\textheight]{./trainee2.png}
+	\caption{Model training pipeline (series mode)}
+	\label{fig:train2}
+\end{figure}
 
 We also utilized Celery and Flower tools. Celery Executor used for scaling out by distributing the workload to multiple Celery workers that can run on different \texttt{machinesFlower} is a web based tool for monitoring and administering Celery clusters. Flower can be enable by passing \texttt{profile flower} option (e.g., \texttt{docker compose up - profile flower up}). This makes the project scalable, parallelized training and distribution. Custom Python Operator tasks manage logic with inter-task communication via \texttt{XCom}. For example, we parsed all metrics and values from training operator to logging operator via \texttt{XCom}. Moreover, in each operators, we provide a log for monitoring.
 
@@ -80,5 +122,14 @@ Benefits of doing it this way include:
 	\item Easy comparison of different architecture and hyperparameter configurations.
 	\item Reproducibility, enabling reruns or deployment of previously trained models.
 \end{itemize}
+
+\begin{figure}
+	\centering
+	\includegraphics[height=0.35\textheight]{./ex.png}
+	\caption{Experimental lifecycle}
+	\label{fig:ex}
+\end{figure}
+
+Figure \ref{fig:ex} shows experimental life-cycle built on MLFlow.
 
 \clearpage
