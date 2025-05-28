@@ -353,6 +353,8 @@
 \usepackage{makeidx}
 \usepackage{enumitem}
 
+\usepackage{multirow}
+
 \usepackage{titlesec}
 
 \usepackage[scaled=0.95]{inconsolata}
@@ -377,7 +379,9 @@
 \lstset{
 	commentstyle=\color{comments},
 	keywordstyle=\color{keywords},
-	stringstyle=\color{strings}
+	stringstyle=\color{strings},
+	tabsize=2,
+%	keywordstyle=\bfseries
 }
 
 \newcounter{problem_counter}
@@ -442,13 +446,15 @@
 \addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
 \clearpage
 
-\listoftables
-\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
-%\clearpage
-
 \listoffigures
 \addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
+%\clearpage
+
+\listoftables
+\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
 \clearpage
+
+
 %
 % \lstlistoflistings
 % \addcontentsline{toc}{chapter}{Code Listings}
@@ -463,8 +469,8 @@
  \import{chapters/chapter01-intro/}{ch1-intro.tex}
  \import{chapters/chapter02-impl/}{ch2-impl.tex}
  \import{chapters/chapter03-model/}{ch3-model.tex}
- \import{chapters/chapter04-deploy/}{ch4-deploy.tex}
  \import{chapters/chapter05-orchest/}{ch5-orchest.tex}
+ \import{chapters/chapter04-deploy/}{ch4-deploy.tex}
  \import{chapters/chapter06-conclusion/}{ch6-conclusion.tex}
 
 %
