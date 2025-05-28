@@ -4,16 +4,694 @@
 
 \subsection{Custom CNN (Convolutional Neural Network)}
 
+A Custom Convolutional Neural Network (CNN) is a deep learning model specifically designed and built from scratch for a particular task, such as image classification. Unlike pre-trained models, a custom CNN is architected and trained entirely on the target dataset. It typically consists of multiple layers, including convolutional layers for feature extraction, pooling layers for dimensionality reduction, and fully connected layers for classification.
+
+Using a custom CNN provides full control over the architecture, allowing it to be optimized specifically for detecting cracks in concrete surfaces. By tailoring kernel sizes, layer depths, and activation functions, the model can be better adapted to the unique characteristics of the dataset, such as varying crack widths, textures, and lighting conditions. This flexibility can lead to improved performance when pre-trained models are not fully aligned with the problem domain.
+
 \subsection{ResNet (Residual Network)}
 
-\cite{He2015DeepRL}
+ResNet (Residual Network) is a deep convolutional neural network architecture introduced by Microsoft Research in 2015. It solves the problem of vanishing gradients in very deep networks by using "residual connections" or "skip connections," which allow the network to learn identity mappings and preserve gradient flow during back-propagation. This enables ResNet to be trained effectively even with hundreds of layers, making it highly accurate for image classification tasks.\cite{He2015DeepRL}
+
+ResNet is ideal for crack detection because it combines high accuracy with computational efficiency. By leveraging pre-trained weights from large-scale datasets like ImageNet, ResNet can transfer learned features to the crack detection task, accelerating training and improving generalization. Its ability to capture both low-level textures and high-level patterns makes it well-suited for identifying subtle crack features in concrete surfaces.
 
 \subsection{MobileNetv3}
 
-\cite{Qian2021}\cite{howard2019searchingmobilenetv3}
+MobileNetV3 is a lightweight convolutional neural network (CNN) developed by Google which is optimized for both speed and accuracy, especially on mobile and edge devices. It is an enhanced version of its predecessors, MobileNetV1 and V2.\cite{Qian2021}\cite{howard2019searchingmobilenetv3}
+
+Moreover, this model also comes in two variants:
+
+\begin{enumerate}
+	\item MobileNetV3-Large for higher accuracy
+	\item MobileNetV3-Small for faster performance on low-power devices.
+\end{enumerate}
+
+The architecture combines depth-wise separable convolutions in order to reduce computation, squeeze-and-excitation (SE) blocks to emphasize important features and a new activation function called hard-swish which improves speed with minimal accuracy loss. These features make MobileNetV3 highly efficient for image classification tasks.
+
+Therefore, we decided to implement this model. As it is particularly suitable for the SDNET2018 dataset which contains over 56,000 images of cracked and non-cracked concrete surfaces including various challenging real-world conditions such as shadows, dirt and surface roughness. MobileNetV3’s ability to extract meaningful features while maintaining a lightweight structure allows it to perform well even under such noisy conditions.
+
+Furthermore, its efficiency makes it ideal for real-time deployment in post-disaster scenarios where fast and reliable crack detection is critical. As we want to deploy on our website. MobileNetV3 enables accurate and fast structural assessments which help engineers and authorities prioritize repairs and enhance infrastructure resilience.
+
+\begin{table}[htbp]
+	\centering
+	\renewcommand{\arraystretch}{1.3}
+	\begin{tabular}{|p{2.4cm}|p{4.3cm}|p{4.3cm}|p{4.3cm}|}
+		\hline
+		\textbf{Model} & \textbf{Architecture Highlights} & \textbf{Key Strengths} & \textbf{Why It's Different / Suitable for Task} \\
+		\hline
+		Custom CNN & Manually designed CNN with convolution, pooling, and dense layers tuned to task & Fully adaptable; focused on specific features; controlled complexity & Tailored to crack characteristics; outperforms when pre-trained models don't fit perfectly \\
+		\hline
+		ResNet & Deep CNN with residual (skip) connections that allow identity mapping and deep training & High accuracy; pre-trained on large datasets; captures low- and high-level features & Deep residual learning enables better gradient flow and generalization, ideal for classification \\
+		\hline
+		MobileNetV3 & Lightweight CNN with depth-wise separable convolutions, SE blocks, and hard-swish & Efficient, fast inference; strong on mobile/edge; robust to noise and real-world variability & Optimized for real-time, low-resource environments; perfect for noisy datasets and deployment \\
+		\hline
+	\end{tabular}
+	\caption{Comparison of Model Architectures for Crack Detection in Concrete}
+	\label{tab:model_comparison}
+\end{table}
+
+Table \ref{tab:model_comparison} compares all 3 classification models in a summary.
+
 
 \section{Object Detection Models}
 
 \subsection{Faster R-CNN}
 
-\cite{NIPS2015_14bfa6bb}
+Faster R-CNN (Region-based Convolutional Neural Network) is a powerful object detection model designed to both identify and localize objects within an image. Unlike simple classification models that only predict whether an image contains a crack or not, Faster R-CNN can detect the exact location of structural defects by drawing bounding boxes around them. The model works in two main stages.\cite{NIPS2015_14bfa6bb}
+
+First, it uses a Region Proposal Network (RPN) to quickly scan the image and suggest possible areas where cracks might be found. Then, it uses a classification and regression network to refine these regions and classify them. This two-stage approach provides high accuracy in detecting small or narrow cracks, even in complex backgrounds like those found in the SDNET2018 dataset.
+
+Faster R-CNN is especially suitable for crack detection in concrete because it can handle images with obstructions, shadows, and rough textures, which are common in the dataset. This makes it ideal for post-earthquake structural inspections, where engineers need to know exactly where the damage is in order to prioritize repairs. By applying Faster R-CNN, the project can move beyond basic classification to a more practical and actionable solution for real-world infrastructure monitoring.
+
+\section{Model training and Implementation}
+
+To develop a robust crack detection system, we employed deep convolutional neural networks using the PyTorch framework. The implementation leverages both pre-trained architectures—ResNet and MobileNetV3—to enable transfer learning and improve classification accuracy with limited training data.
+
+\subsection{Libraries and Tools Used}
+
+\begin{description}
+	\item[PyTorch (\texttt{torch}, \texttt{torchvision})] Core framework for defining models, loss functions, optimizers, and performing GPU-accelerated training.
+	\item[\texttt{torchvision.models}] Provides access to pre-trained models like resnet50 and mobilenet\_v3\_large, which are fine-tuned on our dataset.
+	\item[\texttt{torchvision.transforms}] Used to preprocess images to match the input format expected by pre-trained models (e.g., resizing to $224\times224$, normalization using ImageNet statistics).
+	\item[\texttt{pandas}] Handles CSV-based dataset annotations.
+	\item[\texttt{PIL}] Loads image files for transformation.
+	\item[\texttt{scikit-learn}] Calculates performance metrics (accuracy, precision, recall, F1-score, etc.)
+	\item[\texttt{tqdm}] Displays progress bars for training and evaluation loops.
+\end{description}
+
+\section{Dataset Preparation and Preprocessing}
+
+The dataset, organized into training, validation, and test splits, is managed using a custom CrackDataset class that inherits from \texttt{torch.utils.data.Dataset}. This class reads image paths and labels from CSV files, mapping labels ("Cracked" to 1, "Non-cracked" to 0). Images are preprocessed using \texttt{torchvision.transforms} to resize them to $224\times224$ pixels, convert them to tensors, and normalize them with ImageNet statistics (mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]). DataLoader objects facilitate batched loading with a batch size of 32, enabling efficient training and evaluation.
+
+\begin{lstlisting}[language=Python]
+# Transform to 244 x 244
+transform = transforms.Compose([
+	transforms.Resize((224, 224)),
+	transforms.ToTensor(),
+	transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+\end{lstlisting}
+
+\section{Model Implementation}
+
+We experimented with two popular CNN architectures:
+
+\begin{description}
+	\item[ResNet-50] (\texttt{models.resnet50})
+	\item[MobileNetV3-Large] (\texttt{models.mobilenet\_v3\_large(weights=MobileNet\_V3\_Large\\\_Weights.IMAGENET1K\_V1)})
+\end{description}
+
+These models are pre-trained on ImageNet and then fine-tuned for binary classification by replacing the final layer with a fully connected layer of size 2 (for 2 classes: cracked and non-cracked).
+
+\subsection{Training Configuration}
+
+\begin{itemize}
+	\item Loss Function
+	\item Optimizer
+	\item Scheduler
+\end{itemize}
+
+\subsection{\texttt{DataLoader} Setup}
+
+Data is loaded in batches using \texttt{DataLoader}, with separate loaders for training, validation, and testing. Shuffling is applied to the training loader to ensure better generalization.
+
+\begin{lstlisting}[language=Python]
+# Load datasets
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32)
+test_loader = DataLoader(test_dataset, batch_size=32)
+	
+\end{lstlisting}
+
+\subsection{Device Setup}
+
+Training is performed on GPU if available:
+
+\begin{lstlisting}[language=Python]
+# Check CUDA GPU availability
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+	
+\end{lstlisting}
+
+\section{Classification Models}
+
+\subsection{Custom CNN}
+
+\textit{Omitted and redacted from documentation.}
+
+\subsection{ResNet}
+
+The implementation of the ResNet-18 model for crack detection in structural images involves a systematic approach leveraging transfer learning, advanced optimization techniques, and robust evaluation strategies. This discussion outlines the methodology, focusing on the experimental modifications to the loss function, hyperparameter optimization, and learning rate scheduling, as demonstrated in the provided notebook.
+
+\subsubsection{Model architecture and transfer learning}
+
+ResNet-18, a deep convolutional neural network with residual connections, was selected for its balance of computational efficiency and performance. The model, pre-trained on ImageNet, was adapted for binary classification (cracked vs. non-cracked surfaces) by replacing the final fully connected layer with a new layer outputting two classes. This transfer learning approach leverages pre-trained weights to extract relevant features, reducing training time and mitigating overfitting on a potentially limited dataset. The implementation uses PyTorch's \textbf{\texttt{torchvision.models.resnet18}} with weights set to \textbf{\texttt{ResNet18\_Weights.IMAGENET1K\_V1}}, ensuring compatibility with modern PyTorch conventions.
+
+\begin{lstlisting}[language=Python]
+import torch
+import torch.nn as nn
+from torchvision import models, transforms
+
+model = models.resnet18(pretrained=True)
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, 2)  # 2 classes: Cracked / Non-cracked
+	
+\end{lstlisting}
+
+\subsubsection{Soft F1 Loss}
+
+To address class imbalance and prioritize both precision and recall, a custom SoftF1Loss was introduced instead of the standard Cross-Entropy Loss. The Soft F1 Loss computes a differentiable F1-score based on predicted probabilities, defined as:
+
+\begin{align*}
+	\textit{Soft}F1 = \frac{2 \cdot TP}{2 \cdot TP + FP + FN + \epsilon}
+\end{align*}
+
+where TP, FP, and FN are true positives, false positives, and false negatives calculated from softmax probabilities, and $\epsilon\times10^{-8}$ prevents division by zero. The loss is then defined as 1 - SoftF1, encouraging the model to maximize the F1-score. This approach is particularly effective for imbalanced datasets, as it directly optimizes for the harmonic mean of precision and recall, aligning with the evaluation metric used (F1-score).
+
+\begin{lstlisting}[language=Python]
+class SoftF1Loss(nn.Module):
+	def __init__(self):
+		super().__init__()
+
+	def forward(self, logits, targets):
+		probs = torch.softmax(logits, dim=1)[:, 1]
+		targets = targets.float()
+	
+		TP = (probs * targets).sum()
+		FP = (probs * (1 - targets)).sum()
+		FN = ((1 - probs) * targets).sum()
+		
+		soft_f1 = 2 * TP / (2 * TP + FP + FN + 1e-8)
+		return 1 - soft_f1  # we want to minimize loss, so use 1 - F1
+	
+\end{lstlisting}
+
+\subsubsection{Optimizer and Hyperparameter Tuning}
+
+The Adam optimizer was employed for its adaptive learning rate properties, which accelerate gradient descent convergence. To identify optimal hyperparameters, the Optuna library was used to perform hyperparameter optimization over learning rate (lr) and weight decay. The search space for $lr$ ranged from $10^{-5}$ to $10^{-3}$, and for weight decay from $10^{-6}$ to $10^{-3}$, both on a logarithmic scale. The objective function trained a ResNet-18 model for three epochs per trial, evaluating the F1-score on the validation set. The best parameters (e.g., \texttt{lr=$1.565\times10^{-5}$, weight\_decay=$3.597\times10^{-6}$}) were saved to a \textbf{\texttt{JSON}} file and used for subsequent training, ensuring reproducibility and optimal performance.
+
+\begin{lstlisting}[language=Python]
+import optuna
+
+def objective(trial):
+	# Hyperparameter suggestions
+	lr = trial.suggest_loguniform('lr', 1e-5, 1e-3)
+	weight_decay = trial.suggest_loguniform('weight_decay', 1e-6, 1e-3)
+	
+	# Model
+	model = models.resnet18(pretrained=True)
+	model.fc = nn.Linear(model.fc.in_features, 2)
+	model.to(device)
+	
+	criterion = SoftF1Loss()
+	optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+	
+	# Train 1 - 3 epochs quickly for evaluation
+	train_model(model, train_loader, val_loader, criterion, optimizer, epochs=3)
+	
+	# After training, evaluate F1 on val set
+	f1 = evaluate_model_on_split('val')["F1-Score"]
+	return f1
+	
+\end{lstlisting}
+
+\subsubsection{Learning Rate Scheduling}
+
+A \textbf{\texttt{ReduceLROnPlateau}} scheduler was integrated to dynamically adjust the learning rate based on validation loss. The scheduler reduces the learning rate by a factor of 0.5 if the validation loss does not improve for two consecutive epochs (\texttt{patience=2}). This adaptive strategy prevents overfitting and helps the model escape local minima, enhancing convergence. The scheduler's \texttt{mode='min'} ensures it responds to minimization of the validation loss, aligning with the training objective.
+
+\begin{lstlisting}[language=Python]
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
+\end{lstlisting}
+
+\subsubsection{Training procedure on Early Stopping}
+
+The training loop was designed to monitor both training and validation performance, reporting loss, accuracy, and F1-score per epoch. An early stopping mechanism was implemented to halt training if the validation F1-score did not improve for a specified number of epochs (\texttt{patience=4 or 10} in different experiments). The model state with the highest validation F1-score was retained, preventing overfitting and optimizing generalization. The training process was conducted for up to 30 epochs, though early stopping often terminated earlier (e.g., epoch 9 with a validation F1-score of 0.7559).
+
+\begin{lstlisting}[language=Python]
+def train_model(model, train_loader, val_loader, criterion, optimizer, 
+scheduler=None, epochs=10, patience=3):
+	best_f1 = 0.0
+	epochs_no_improve = 0
+	best_model_state = copy.deepcopy(model.state_dict())
+
+	for epoch in range(epochs):
+		model.train()
+		running_loss = 0.0
+		correct = 0
+		
+		for inputs, labels in train_loader:
+			inputs, labels = inputs.to(device), labels.to(device)
+			
+			optimizer.zero_grad()
+			outputs = model(inputs)
+			loss = criterion(outputs, labels)
+			loss.backward()
+			optimizer.step()
+			
+			running_loss += loss.item() * inputs.size(0)
+			correct += (outputs.argmax(1) == labels).sum().item()
+			
+		train_loss = running_loss / len(train_loader.dataset)
+		train_acc = correct / len(train_loader.dataset)
+		
+		# Evaluate on validation set
+		# ...
+		
+		# Early stopping logic
+		if val_f1 > best_f1:
+			best_f1 = val_f1
+			epochs_no_improve = 0
+			best_model_state = copy.deepcopy(model.state_dict())
+		else:
+			epochs_no_improve += 1
+			if epochs_no_improve >= patience:
+			print(f"Early stopping triggered at epoch {epoch+1}. 
+			Best Val F1: {best_f1:.4f}")
+		model.load_state_dict(best_model_state)
+		break
+	
+	return model  # Return the best model
+\end{lstlisting}
+
+\subsection{Evaluation and Performance Metrics}
+
+Model performance was evaluated on training, validation, and test sets using a comprehensive set of metrics: accuracy, precision, recall, F1-score, AUC-ROC, and confusion matrix. The evaluation function processes each image individually, applying the same pre-processing transformations and computing predictions and probabilities. The final model achieved a validation F1-score of 0.7559, with a test F1-score of 0.7447, indicating robust generalization. The high recall (0.7692 on test) suggests effective detection of cracked surfaces, critical for structural safety applications.
+
+\begin{lstlisting}[language=Python]
+from sklearn.metrics import (
+	accuracy_score, precision_score, recall_score,
+	f1_score, roc_auc_score, confusion_matrix
+)
+	
+# Evaluation function
+def evaluate_model_on_split(split_name):
+	# Load images and labels
+	# Run inference
+	# Compute metrics
+
+	return {
+		"Accuracy": accuracy_score(y_true, y_pred),
+		"Precision": precision_score(y_true, y_pred, zero_division=0),
+		"Recall": recall_score(y_true, y_pred, zero_division=0),
+		"F1-Score": f1_score(y_true, y_pred, zero_division=0),
+		"AUC-ROC": roc_auc_score(y_true, y_score),
+		"Confusion Matrix": confusion_matrix(y_true, y_pred).tolist()
+	}
+
+\end{lstlisting}
+
+\subsubsection{Implementation Considerations}
+
+The implementation leverages GPU acceleration when available, using \texttt{torch.device("cuda" if torch.cuda.is\_available() else "cpu")}. The model state is saved post-training (\textbf{\texttt{resnet\_best\_params\_early4.pth}}), enabling deployment or further fine-tuning. The use of libraries like Pandas for CSV handling, PIL for image loading, and scikit-learn for metrics ensures a modular and maintainable codebase. The integration of tqdm for progress bars and JSON for hyperparameter storage enhances usability and reproducibility.
+
+\subsubsection{Discussion and Further Directions}
+
+The methodology demonstrates a robust framework for implementing ResNet-18 in crack detection, with experimental modifications improving performance over a baseline approach. The Soft F1 Loss effectively addresses class imbalance, while hyperparameter tuning and scheduling optimize training dynamics. However, the consistent validation F1-score of approximately 0.2645 across Optuna trials suggests potential issues with the optimization setup or dataset characteristics, warranting further investigation. Future work could explore data augmentation to enhance robustness, alternative architectures (e.g., ResNet-50), or ensemble methods to boost performance. Additionally, extending the hyperparameter search to include batch size or scheduler parameters could yield further improvements.
+
+\subsection{MobileNetV3}
+
+\begin{lstlisting}[language=Python]
+# Get MobileNetV3 model
+model = get_MobileNetV3_model(num_classes=2)  
+# 2 classes: Non-cracked (0) / Cracked (1)
+model.to(device)
+# Define loss function
+criterion = nn.CrossEntropyLoss()
+# Define optimizer and learning rate scheduler
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+# Use learning rate scheduler to reduce lr by 0.1 every 3 epochs
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+print(f"------------------------------------------------
+----------------------------")
+# Train model
+print("Starting training...")
+start_time = time.time()
+model, best_accuracy = train_model(
+	model,
+	train_loader,
+	val_loader,
+	criterion,
+	optimizer,
+	scheduler,
+	device,
+	num_epochs=10)
+end_time = time.time()
+print(f"Training completed in {(end_time - start_time) / 60:.2f} minutes")
+print(f"Best validation accuracy: {best_accuracy:.2f}%")
+torch.save(model.state_dict(), '6040_MobileNetV3_concrete_crack_detector.pth')
+print(f"-------------------------------------------------
+---------------------------")
+\end{lstlisting}
+
+The function by calling \textbf{\texttt{get\_MobileNetV3\_model}} which loads a pretrained MobileNetV3-Large model using default weights. The final classification layer is then replaced to match the number of output classes, which is set to 2 (representing cracked and non-cracked surfaces).
+
+\begin{lstlisting}[language=Python]
+# Load pretrained MobileNetV3 model
+def get_MobileNetV3_model(num_classes=2):
+
+	weights = MobileNet_V3_Large_Weights.DEFAULT
+	model = mobilenet_v3_large(weights=weights)
+	model.classifier[3] = nn.Linear(model.classifier[3].in_features, num_classes)
+	
+	return model
+\end{lstlisting}
+
+Once the model is prepared, it is moved to the appropriate computation device (either GPU or CPU) to ensure efficient training. The loss function is defined as cross-entropy loss, which is suitable for multi-class classification tasks. An Adam optimizer is configured to update the model's weights during training, with a small weight decay to prevent overfitting. A learning rate scheduler is also set up to reduce the learning rate every 3 epochs by a factor of 0.1, helping the model converge more effectively.
+
+Next, the training process begins by calling the \textbf{\texttt{train\_model}} function. This function manages the overall training loop over a specified number of epochs. Within each epoch, the model is first trained on the training dataset using the \textbf{\texttt{train\_one\_epoch}} function. In this function, the model is set to training mode, and for each batch in the training loader, it performs a forward pass to make predictions, computes the loss, calculates gradients through back-propagation, clips gradients to avoid explosion, and updates the model's weights. It also tracks and prints batch-level accuracy and loss periodically. After training on all batches, the average loss and accuracy for the epoch are returned.
+
+\begin{lstlisting}[language=Python]
+# Function to train the model
+def train_model(model, train_loader, val_loader, criterion, optimizer,
+ scheduler, device, num_epochs):
+	best_accuracy = 0.0
+	best_model_wts = None
+	
+	for epoch in range(num_epochs):
+		print(f"Epoch {epoch+1}/{num_epochs}")
+		print("-" * 10)
+		
+		# Train for one epoch
+		epoch_loss, train_accuracy = train_one_epoch(model, train_loader,
+		 criterion, optimizer, device)
+		print(f"Training Loss: {epoch_loss:.4f},
+		 Training Accuracy: {train_accuracy:.2f}%")
+		
+		# Update learning rate
+		scheduler.step()
+		
+		# Evaluate on validation set
+		val_metrics = evaluate(model, val_loader, device)
+		val_accuracy = val_metrics['accuracy'].item()
+		val_f1 = val_metrics['f1'].item()
+		
+		print(f"Validation Accuracy: {val_accuracy:.2f}%, F1-Score: {val_f1:.4f}")
+		
+		# Save best model based on accuracy
+		if val_accuracy > best_accuracy:
+			best_accuracy = val_accuracy
+			best_model_wts = model.state_dict().copy()
+			torch.save(best_model_wts, f'best_model_epoch_{epoch+1}.pth')
+			print(f"Saved best model with Accuracy: {best_accuracy:.2f}%")
+		
+		print()
+	
+	# Load best model weights
+	model.load_state_dict(best_model_wts)
+	return model, best_accuracy
+
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+def train_one_epoch(model, data_loader, criterion, optimizer, device):
+	model.train()
+	
+	total_loss = 0
+	num_batches = 0
+	correct = 0
+	total = 0
+	
+	for images, targets in tqdm(data_loader, desc="Training"):
+		try:
+			# Move data to device
+			images = images.to(device)
+			targets = targets.to(device)
+			
+			# Zero the parameter gradients
+			optimizer.zero_grad()
+			
+			# Forward pass
+			outputs = model(images)
+			loss = criterion(outputs, targets)
+			
+			# Backward pass
+			loss.backward()
+			
+			# Clip gradients to prevent explosion
+			torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+			
+			# Update weights
+			optimizer.step()
+			
+			# Update statistics
+			total_loss += loss.item()
+			num_batches += 1
+			
+			# Calculate accuracy
+			_, predicted = torch.max(outputs.data, 1)
+			total += targets.size(0)
+			correct += (predicted == targets).sum().item()
+			
+			# Print loss occasionally
+			if num_batches % 50 == 0:
+			accuracy = 100 * correct / total
+			print(f"Batch {num_batches}, Loss: {loss.item():.4f},
+			 Accuracy: {accuracy:.2f}%")
+	
+		except Exception as e:
+			print(f"Error in batch: {e}")
+			continue
+	
+	# Calculate average loss and accuracy
+	if num_batches == 0:
+		print("WARNING: No valid batches in this epoch!")
+		return 0.0, 0.0
+	
+	avg_loss = total_loss / num_batches
+	accuracy = 100 * correct / total
+	
+	print(f"Processed {num_batches} batches")
+	print(f"Training Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
+	
+	return avg_loss, accuracy
+\end{lstlisting}
+
+After training each epoch, the learning rate scheduler is updated, and the model is evaluated on the validation dataset using the evaluate function. This function sets the model to evaluation mode and disables gradient computation for efficiency. It then makes predictions for the entire validation set and collects both predictions and ground truth labels to calculate overall accuracy. A confusion matrix is generated to compute precision, recall, and F1-score, which are printed for detailed performance insights. If the current epoch yields the best validation accuracy so far, the model's weights are saved.
+
+\begin{lstlisting}[language=Python]
+def evaluate(model, data_loader, device):
+	model.eval()
+	correct = 0
+	total = 0
+	all_preds = []
+	all_targets = []
+	
+	with torch.no_grad():
+		for images, targets in tqdm(data_loader, desc="Evaluating"):
+			images = images.to(device)
+			targets = targets.to(device)
+			
+			# Get predictions
+			outputs = model(images)
+			_, predicted = torch.max(outputs.data, 1)
+			
+			# Update statistics
+			total += targets.size(0)
+			correct += (predicted == targets).sum().item()
+			
+			# Store predictions and targets for additional metrics
+			all_preds.extend(predicted.cpu().numpy())
+			all_targets.extend(targets.cpu().numpy())
+	
+	# Calculate accuracy
+	accuracy = 100 * correct / total
+	
+	# Calculate confusion matrix
+	cm = confusion_matrix(all_targets, all_preds)
+	precision, recall, f1, _ = precision_recall_fscore_support(all_targets,
+	 all_preds, average='binary')
+	
+	print(f"Accuracy: {accuracy:.2f}%")
+	print(f"Precision: {precision:.4f}")
+	print(f"Recall: {recall:.4f}")
+	print(f"F1-Score: {f1:.4f}")
+	print(f"Confusion Matrix:\n{cm}")
+	
+	return {
+		"accuracy": torch.tensor(accuracy),
+		"precision": torch.tensor(precision),
+		"recall": torch.tensor(recall),
+		"f1": torch.tensor(f1)
+	}
+\end{lstlisting}
+
+Once all epochs are completed, the best-performing model (based on validation accuracy) is restored and saved to a file \textbf{\texttt{MobileNetV3\_concrete\_crack\_detector.pth}} using \texttt{torch.save}. This saved model can later be used for testing or deployment.
+
+\section{Object Detection Models}
+
+\subsection{Faster R-CNN}
+
+Since we chose to implement a model capable of both object detection and localization, we encountered an error stating: \texttt{"Missing bounding box columns: ['x1', 'y1', 'x2', 'y2'] - Creating default bounding boxes for the entire image."}
+
+This highlighted a critical issue that the \texttt{label.csv} file on its own is not sufficient for training a Faster R-CNN model. While label.csv typically contains only image filenames and their corresponding class labels. This format is suitable for image classification tasks, not object detection. On the other hand, Faster R-CNN requires precise spatial information specifically, bounding box coordinates (such as $x_{min}, y_{min}, x_{max}, y_{max}$) in order to accurately learn both the location and category of each object within an image. Without this data, the model cannot effectively learn to detect or localize objects, rendering the training process ineffective. 
+
+Therefore, unless the CSV file contains both class labels and bounding box annotations, it cannot be used to train a Faster R-CNN model properly.
+
+\section{Evaluation}
+
+To ensure reliable assessment of model performance, we adopted a structured evaluation strategy centered on generalization to unseen data. The dataset was divided into three subsets: 70\% for training, 15\% for validation, and 15\% for testing.
+
+To mitigate class imbalance during training, we applied random undersampling to the training set by reducing the number of non-cracked images to match the cracked ones, resulting in a balanced 50:50 ratio. In contrast, both the validation and test sets retained their close to original distribution (approximately 40:60 cracked to non-cracked). It can reflect real-world conditions. This strategy ensures the model learns from balanced data while still being evaluated on naturally imbalanced data, reducing bias during training and improving the validity of performance assessment on unseen scenarios.
+
+Given the class imbalance in the test set, we selected the F1-score as our primary evaluation metric. Unlike accuracy, the F1-score provides a more informative measure when dealing with imbalanced classes by considering both precision and recall. This ensures that the model’s ability to correctly identify cracks is properly evaluated, without being biased by the dominant non-crack class.
+
+All reported results in this study are based solely on the unseen test set, which was held out during both training and validation. This strict separation prevents data leakage and provides a clear indication of how well the models generalize to new, real-world data.
+
+\subsection{Custom CNN}
+
+To explore the feasibility of a lightweight architecture, we developed a Custom CNN and evaluated it on both 50:50 balanced and 40:60 imbalanced dataset configurations. However, results indicated that this model consistently underperformed across all metrics compared to deeper architectures like ResNet and MobileNetV3.
+
+In the 50:50 setup, the model achieved only 0.74 accuracy, 0.32 precision, 0.63 recall, and an F1-score of 0.43, with an AUC-ROC of 0.63 - demonstrating poor precision and class separation. The performance further declined in the 40:60 configuration, where although recall was high (0.88), the overall accuracy dropped to 0.50, and precision plummeted to 0.21, yielding an F1-score of just 0.34. These results reflect a high false-positive rate and weak generalization ability.
+
+Given its limited effectiveness and significantly weaker performance relative to other models in this study, we decided to discontinue further experiments with the Custom CNN and excluded it from deployment considerations.
+
+\begin{table}[htbp]
+	\centering
+	\renewcommand{\arraystretch}{1.3}
+	\small
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{Dataset} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{AUC-ROC} & \textbf{Confusion Matrix} \\
+		\hline
+		50:50 & 0.74 & 0.32 & 0.63 & 0.43 & 0.63 &
+		\begin{tabular}{@{}c@{}}
+			\texttt{5496 \quad 1654} \\
+			\texttt{ 469 \quad  796}
+		\end{tabular} \\
+		\hline
+		40:60 & 0.50 & 0.21 & 0.88 & 0.34 & 0.76 &
+		\begin{tabular}{@{}c@{}}
+			\texttt{3060 \quad 4090} \\
+			\texttt{ 156 \quad 1109}
+		\end{tabular} \\
+		\hline
+	\end{tabular}
+	\caption{Evaluation result from Custom CNN in Concrete Models}
+	\label{tab:dataset_performance_CNN}
+\end{table}
+
+\subsection{ResNet}
+
+To assess how dataset balance and hyperparameter tuning affect model performance, we trained and evaluated ResNet on both a balanced 50:50 and imbalanced 40:60 cracked-to-non-cracked dataset configuration. Additionally, we fine-tuned both models using hyperparameter optimization to explore performance ceilings under each setting.
+
+The baseline 50:50 model trained with a fixed learning rate of 0.001 achieved an accuracy of 0.87, a precision of 0.54, and a recall of 0.76, yielding an F1-score of 0.63 and AUC-ROC of 0.89. These results indicate that while the model effectively detected most cracked images (high recall), it also produced a considerable number of false positives, likely due to limited exposure to non-cracked surface variability during training. However, most evaluation metrics were stronger compared to the 40:60 setup, particularly in precision and F1-score.
+
+After applying hyperparameter optimization, the 50:50 model’s performance significantly improved. It achieved an accuracy of 0.92, precision of 0.72, recall of 0.77, F1-score of 0.74, and AUC-ROC of 0.93. These results demonstrate that with proper tuning, even a model trained on a balanced dataset can generalize well while maintaining high sensitivity and specificity.
+In comparison, the 40:60 model trained with the same learning rate of 0.001 produced a higher recall of 0.83 and AUC-ROC of 0.91, indicating improved sensitivity and class discrimination. However, its precision dropped to 0.47, and F1-score to 0.60, suggesting a less balanced performance and a higher rate of false positives. This is likely due to the model compensating for the class imbalance during training.
+
+With optimized parameters, the 40:60 model achieved accuracy of 0.90, precision of 0.63, recall of 0.84, F1-score of 0.72, and AUC-ROC of 0.94. This model performed comparably to the optimized 50:50 model, showing superior recall and AUC, which indicates stronger generalization in identifying cracks but at the cost of increased false positives.
+
+\begin{table}[htbp]
+	\centering
+	\renewcommand{\arraystretch}{1.3}
+	\small
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{Dataset} & \textbf{\texttt{LR}} & \textbf{Acc.} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AUC-ROC} & \textbf{Confusion Matrix} \\
+		\hline
+		\multirow{2}{*}{50:50} & 0.001 & 0.87 & 0.54 & 0.76 & 0.63 & 0.89 &
+		\begin{tabular}{@{}c@{}} \texttt{[6343 \quad 807} \\ \texttt{ 303 \quad 962]} \end{tabular} \\
+		& Best Params & 0.92 & 0.72 & 0.77 & 0.74 & 0.93 &
+		\begin{tabular}{@{}c@{}} \texttt{[6775 \quad 375} \\ \texttt{ 292 \quad 973]} \end{tabular} \\
+		\hline
+		\multirow{2}{*}{40:60} & 0.001 & 0.83 & 0.47 & 0.83 & 0.60 & 0.91 &
+		\begin{tabular}{@{}c@{}} \texttt{[5940 \quad 1210} \\ \texttt{ 210 \quad 1055]} \end{tabular} \\
+		& Best Params & 0.90 & 0.63 & 0.84 & 0.72 & 0.94 &
+		\begin{tabular}{@{}c@{}} \texttt{[6525 \quad 625} \\ \texttt{ 197 \quad 1068]} \end{tabular} \\
+		\hline
+	\end{tabular}
+	\caption{Evaluation result from ResNet in Concrete Models}
+	\label{tab:performance_hyperparam_ResNet}
+\end{table}
+
+In conclusion, the 50:50 training configuration with optimized parameters produced the best overall balance between sensitivity and precision, achieving strong F1-score and accuracy. While the 40:60 model offered higher recall and AUC, it came at the cost of reduced precision, leading to more false positives. This tradeoff is important in real-world scenarios: if minimizing false alarms is critical, as in large-scale infrastructure inspections, the 50:50 setup is more appropriate. On the other hand, if maximizing crack detection is prioritized, the 40:60 model with tuned parameters may be preferred. These findings highlight the importance of balancing dataset composition and model tuning based on deployment goals.
+
+\subsection{MobileNetv3}
+
+In order to understand how training set composition affects performance, we compared two models of MobileNetV3 which the first one trained on a 50:50 balanced dataset and another on a less aggressively undersampled 40:60 cracked-to-non-cracked dataset. The evaluation results for the 50:50 model showed a high recall of 0.8744, meaning the model was very sensitive in detecting cracks and correctly identified most cracked images. However, its precision was relatively low at 0.5657 which indicates that many of the images classified as "cracked" were actually non-cracked. Therefore, this leads to a high number of false positives. 
+
+Moreover, The F1-score from TEST which balances precision and recall is equal to 0.6869. While the F1-score from TRAIN is equal to 0.87 which is quite different. This suggesting moderate overall overfitting while the accuracy was 0.7556 means that the model correctly predicted about 76\% of all images. Despite achieving a strong AUC-ROC score of 0.9528 can reflect excellent class discrimination. However, the model exhibited signs of overfitting. This likely resulted from the aggressive undersampling which removed many non-cracked examples and limiting the model’s exposure to natural surface variability. As a result, the model appeared to overly favor the "crack" class which might reduce its reliability in real-world applications where false alarms can be costly and time-consuming.
+
+In contrast, the 40:60 dataset configuration applied less aggressive undersampling, maintaining more non-cracked images and creating a cracked to non-cracked ratio of approximately 2:3. This provided the model with a richer variety of non-cracked surface patterns while still addressing class imbalance. The evaluation results showed a more balanced performance. The Recall score dropped to 0.7829 while precision significantly improved to 0.7222 which indicated that fewer false positives. 
+
+Moreover, The F1-score was 0.7513 and it can demonstrate the better harmony between sensitivity and specificity. Additionally, the accuracy increased to 0.8022, and the AUC-ROC was 0.8828 which is slightly lower than the 50:50 model but still showing good class separation. The model trained on this configuration showed less overfitting and generalized better to unseen data. Therefore, In practical deployment especially in post-earthquake inspections, a high false-positive rate can overwhelm response teams with unnecessary checks, making precision as critical as recall. These results suggest the model performed more conservatively, reducing false alarms while maintaining strong crack detection which is crucial for real-world reliability.
+
+\begin{table}[htbp]
+	\centering
+	\renewcommand{\arraystretch}{1.3}
+	\small
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{Dataset} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{AUC-ROC} & \textbf{Confusion Matrix} \\
+		\hline
+		\multirow{1}{*}{50:50} & 0.88 & 0.57 & 0.87 & 0.69 & 0.95 &
+		\begin{tabular}{@{}c@{}} \texttt{6301 \quad 849} \\ \texttt{ 159 \quad 1106} \end{tabular} \\
+		\hline
+		\multirow{1}{*}{40:60} & 0.91 & 0.67 & 0.85 & 0.75 & 0.96 &
+		\begin{tabular}{@{}c@{}} \texttt{6615 \quad 535} \\ \texttt{ 190 \quad 1075} \end{tabular} \\
+		\hline
+	\end{tabular}
+	\caption{Evaluation result from MobileNetV3 in Concrete Models}
+	\label{tab:performance_mobilenet}
+\end{table}
+
+In conclusion, while the 50:50 model focused on finding as many cracks as possible. But it still made more mistakes by wrongly labeling non-cracked images as cracked. This happened because it didn’t see enough examples of non-cracked images during training. On the other hand, the 40:60 model had a better mix of cracked and non-cracked images which can enhance the performance of the model and it makes more accurate predictions with fewer false alarms. Therefore, we can conclude that the 40:60 configuration is more suitable for deployment in real-life structural inspections, especially in high-stakes post-disaster scenarios. These findings underscore the importance of choosing training strategies that can reflect real-world class distributions and evaluation metrics aligned with deployment goals to ensure dependable performance in mission-critical applications.
+
+
+\section{Overfitting Analysis}
+
+Both the ResNet and MobileNetV3 models show moderate overfitting, with high training performance (ResNet F1-score: 0.9382, MobileNetV3 F1-score: 0.8653) but a noticeable drop in the validation and test sets (ResNet F1-score: 0.7447, MobileNetV3 F1-score: 0.7478). Despite this, the models maintain consistent AUC-ROC scores (~0.93) between the validation and test sets, indicating strong generalization.
+This overfitting can be justified, given that the models will be retrained with real-world data through user input. This iterative retraining is expected to improve generalization further, especially in practical deployment scenarios. While overfitting is present, it does not undermine the models' potential for real-world applications, and the overall performance is deemed suitable for the project's objectives.
+
+
+\section{Conclusion}
+Based on the comprehensive evaluation of the classification models, we have identified clear deployment candidates that demonstrate robust performance across both balanced and imbalanced dataset configurations. Among the architectures tested, ResNet and MobileNetV3 consistently outperformed the Custom CNN, particularly in terms of F1-score, precision, and generalization to unseen data. Their superior results were achieved after extensive hyperparameter tuning and strategic dataset balancing, which enhanced the models’ ability to capture the complex visual features necessary for reliable crack detection.
+
+For ResNet, the optimized 50:50 training configuration produced a strong balance between sensitivity and precision, achieving an F1-score of 0.74 and an AUC-ROC of 0.93, making it well-suited for applications where both false positives and false negatives must be minimized. Meanwhile, the 40:60 configuration, while offering slightly higher recall (0.84) and AUC-ROC (0.94), did so at the expense of precision, suggesting a higher false alarm rate. Nevertheless, both configurations performed competitively and provide deployment-ready reliability depending on specific use-case priorities.
+
+MobileNetV3, a more lightweight model, demonstrated excellent adaptability, with the 40:60 configuration yielding the highest accuracy (0.91), a well-balanced F1-score (0.75), and reduced overfitting compared to its 50:50 counterpart. This makes it a particularly viable model for deployment in resource-constrained environments such as mobile or embedded systems used in field inspections. Its improved precision and better generalization in the 40:60 setup make it especially valuable in high-stakes scenarios such as post-earthquake assessments, where reducing false positives is as critical as detecting true cracks.
+
+Therefore, we will proceed to deploy both the optimized ResNet and MobileNetV3 models, leveraging their respective strengths. ResNet will serve as a high-capacity baseline model for environments with sufficient computational resources, while MobileNetV3 offers a compact, efficient alternative optimized for real-world deployment. This dual-deployment strategy ensures robustness, scalability, and adaptability across a range of structural inspection contexts, ultimately contributing to more reliable and actionable damage assessment systems.
+
+\begin{table}[htbp]
+	\centering
+	\renewcommand{\arraystretch}{1.3}
+	\small
+	\begin{tabular}{|p{2.2cm}|c|c|c|c|c|c|p{3cm}|}
+		\hline
+		\textbf{Model} & \textbf{\texttt{Acc.}} & \textbf{\texttt{Prec.}} & \textbf{\texttt{Recall}} & \textbf{\texttt{F1}} & \textbf{\texttt{AUC-ROC}} & \textbf{Confusion Matrix} & \textbf{Based On} \\
+		\hline
+		Custom CNN (50:50) & 0.74 & 0.32 & 0.63 & 0.43 & 0.63 &
+		\begin{tabular}{@{}c@{}} \texttt{5496 \quad 1654} \\ \texttt{ 469 \quad 796} \end{tabular} & Lightweight exploration \\
+		\hline
+		Custom CNN (40:60) & 0.50 & 0.21 & 0.88 & 0.34 & 0.76 &
+		\begin{tabular}{@{}c@{}} \texttt{3060 \quad 4090} \\ \texttt{ 156 \quad 1109} \end{tabular} & Lightweight exploration \\
+		\hline
+		ResNet (50:50, LR=0.001) & 0.87 & 0.54 & 0.76 & 0.63 & 0.89 &
+		\begin{tabular}{@{}c@{}} \texttt{6343 \quad 807} \\ \texttt{ 303 \quad 962} \end{tabular} & Balanced dataset \\
+		\hline
+		ResNet (50:50, Best Params) & 0.92 & 0.72 & 0.77 & 0.74 & 0.93 &
+		\begin{tabular}{@{}c@{}} \texttt{6775 \quad 375} \\ \texttt{ 292 \quad 973} \end{tabular} & Tuned for balance \\
+		\hline
+		ResNet (40:60, LR=0.001) & 0.83 & 0.47 & 0.83 & 0.60 & 0.91 &
+		\begin{tabular}{@{}c@{}} \texttt{5940 \quad 1210} \\ \texttt{ 210 \quad 1055} \end{tabular} & Imbalanced dataset \\
+		\hline
+		ResNet (40:60, Best Params) & 0.90 & 0.63 & 0.84 & 0.72 & 0.94 &
+		\begin{tabular}{@{}c@{}} \texttt{6525 \quad 625} \\ \texttt{ 197 \quad 1068} \end{tabular} & Tuned for recall \\
+		\hline
+		MobileNetV3 (50:50) & 0.88 & 0.57 & 0.87 & 0.69 & 0.95 &
+		\begin{tabular}{@{}c@{}} \texttt{6301 \quad 849} \\ \texttt{ 159 \quad 1106} \end{tabular} & Aggressively undersampled \\
+		\hline
+		MobileNetV3 (40:60) & 0.91 & 0.67 & 0.85 & 0.75 & 0.96 &
+		\begin{tabular}{@{}c@{}} \texttt{6615 \quad 535} \\ \texttt{ 190 \quad 1075} \end{tabular} & Mildly undersampled \\
+		\hline
+	\end{tabular}
+	\caption{Comparison of Evaluation Result from Crack Detection in Concrete Models}
+	\label{tab:comparison_crack_models}
+\end{table}
+
+
+
+

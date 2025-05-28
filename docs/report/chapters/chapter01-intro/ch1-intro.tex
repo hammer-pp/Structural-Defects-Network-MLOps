@@ -8,10 +8,9 @@ Traditional inspection methods rely heavily on manual labor which are time-consu
 
 This project proposes an AI-powered defect detection system that leverages deep learning to automate the identification and localization of structural damage from images. By utilizing pre-trained models such as ResNet \cite{He2015DeepRL}, EfficientNet\cite{pmlr-v97-tan19a} and MobileNetV3\cite{howard2019searchingmobilenetv3}. The system classifies images as either cracked or non-cracked and applies object detection techniques for precise localization. This approach not only improves the speed and accuracy of structural assessments but also supports engineers and decision-makers in prioritizing repairs, ultimately enhancing infrastructure resilience after natural disasters.
 
-
 \section{Project Scope and Goals}
 
-The goal of this project is to enhance structural health monitoring through automated crack detection, reducing manual inspection and improving safety. To achieve this, the project will:
+The goal of this project is to enhance structural health monitoring through automated crack detection, reducing manual inspection and improving safety. To achieve this, the project will aim to:
 
 \begin{enumerate}
 	\item Develop a classification model (ResNet, EfficientNet and MobileNetV3) in order to distinguish between cracked and non-cracked surfaces with high accuracy.
@@ -26,8 +25,25 @@ This project will contribute to efficient and scalable crack detection, improvin
 
 \section{Data Description}
 
+\begin{figure}[!h]
+	\centering
+	\includegraphics[height=0.3\textheight]{./SDNet.png}
+	\caption[Structural Defects Network (SDNET)]{Structural Defects Network (SDNET)}
+\end{figure}
+
+In order to implement this project, we use the dataset from Kaggle (URL: \url{https://www.kaggle.com/datasets/aniruddhsharma/structural-defects-network-concrete-crack-images} ). This dataset is called "Structural Defects Network (SDNET) 2018".
+
+The SDNET2018 dataset is a large, labeled image dataset used to train and test AI models for detecting cracks in concrete. It contains over 56,000 images of both cracked and non-cracked concrete surfaces which include bridge decks, walls and pavements. The cracks range in width from 0.06 mm to 25 mm and include various real-world conditions like shadows, rough surfaces and debris. Additionally, Each image is segmented into $256 \times 256$ px sub-images. Each sub-image is labelled as 'Cracked' if there was a crack in the sub-image or 'Non-cracked' if there was not a crack. Moreover, this dataset supports the development of deep learning models for concrete crack detection and is widely used in structural health monitoring research.
+
+\section{System Implementation and Source Code}
+
+The complete source code, model training pipeline, MLOps integration and the documentation are available on the following link :
+
+\url{https://github.com/hammer-pp/Structural-Defects-Network-MLOps}  
+
 \section{Keywords}
 
+\textit{Deep Learning, Crack Detection, Concrete Surface Inspection, Structural Health Monitoring, Image Classification, Convolutional Neural Networks (CNN), Pre-trained Models (ResNet, MobileNet), Image Augmentation, Feature Extraction, Model Evaluation Metrics (Accuracy, Precision, Recall, F1-score, AUC-ROC and Confusion Matrix), Flask/FastAPI Deployment, Cloud Computing (AWS, GCP, Azure) and CI/CD for Machine Learning}
 
 
 \clearpage
