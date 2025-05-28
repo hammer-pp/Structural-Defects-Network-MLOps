@@ -2,6 +2,9 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Cloudinary config ---
 cloudinary.config(
@@ -11,8 +14,8 @@ cloudinary.config(
     secure=True
 )
 
-file_path = "../../Dataset/Users/Non-cracked/S__41639939.jpg"
-relative_path = "Users/Non-cracked"
+file_path = "../../Dataset/Users/Cracked/326c4c8a42044a68988c07e46e2fbb34.jpg"
+relative_path = "Users/Cracked"
 filename = os.path.splitext(os.path.basename(file_path))[0]  # e.g. 'sample'
 # --- Upload the image ---
 upload_response = cloudinary.uploader.upload(
