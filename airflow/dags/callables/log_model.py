@@ -62,9 +62,15 @@ def log_model(**kwargs):
     try:
         with mlflow.start_run(run_name=f"{model_type.capitalize()}_Crack_Classifier"):
             mlflow.log_metric("accuracy", accuracy)
+            mlflow.log_metric("precision", precision)
+            mlflow.log_metric("recall", recall)
+            mlflow.log_metric("f1_score", f1_score)
+            mlflow.log_metric("auc_roc", auc_roc)
             mlflow.log_param("optimizer", optimizer_name)
             mlflow.log_param("learning_rate", learning_rate)
             mlflow.log_param("epochs", epochs)
+            if confusion_matrix is not None:
+                mlflow.log_dict(confusion_matrix, "confusion_matrix.json")
             mlflow.pytorch.log_model(
                 model,
                 artifact_path="model",

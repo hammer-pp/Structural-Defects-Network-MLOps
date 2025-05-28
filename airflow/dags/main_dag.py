@@ -32,7 +32,7 @@ with DAG(
     description='Retrain model when enough new data is available',
     catchup=False,
     tags=['concrete', 'dag'],
-    schedule_interval= '@weekly',
+    schedule='@weekly',
 ) as dag:
 
     start = EmptyOperator(task_id='start')
