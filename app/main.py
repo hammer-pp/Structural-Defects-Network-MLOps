@@ -53,10 +53,21 @@ model.load_state_dict(torch.load("model/best_model.pth", map_location="cpu")) # 
 model.eval()
 
 # Preprocessing
+# transform = transforms.Compose([
+#     transforms.Resize((224, 224)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+# ])
+
+# Best applicable for ResNet-18 based models (custom dimension)
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize(256),              # Resize shorter side to 256 px
+    transforms.CenterCrop(224),          # Crop center to 224×224
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406], 
+        std=[0.229, 0.224, 0.225]
+    )
 ])
 
 MODEL_DIR = "model"
