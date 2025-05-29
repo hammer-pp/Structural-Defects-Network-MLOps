@@ -211,15 +211,19 @@ app/
 cd app
 ```
 
-2. Build a Docker Image
+2. Setup the virtual environment
 
 ```bash
-docker build --tag 'Structure_prediction_UI'
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 3. Access the website:
 
 ```bash
+mkdir static
+fastapi dev main.py
 localhost:8000
 ```
 
