@@ -22,7 +22,7 @@ In order to implement this project, we use the dataset from Kaggle (URL: https:/
 
 ---
 ## ✨ System Design
-![system design](https://github.com/hammer-pp/Structural-Defects-Network-MLOps/blob/main/docs/report/architecture.png)
+![system design](./docs/architecture.png)
 ## 📦 Setup Instructions
 
 ### 1. Create a Virtual Environment (Recommended)
