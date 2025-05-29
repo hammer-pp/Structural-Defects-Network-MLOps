@@ -5,3 +5,4 @@ torchvision
 jinja2
 pillow
 python-multipart
+dotenv
