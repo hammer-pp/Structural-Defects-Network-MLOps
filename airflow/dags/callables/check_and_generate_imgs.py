@@ -12,6 +12,24 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 def check_and_generate_csv(**kwargs):
+    """
+    Checks Cloudinary folders for new user-uploaded images, updates a CSV dataset with new image metadata, 
+    and determines if enough new images have been added since the last retraining to trigger preprocessing.
+    This function:
+    - Connects to Cloudinary using credentials from environment variables.
+    - Scans specified Cloudinary folders for uploaded images.
+    - Loads the timestamp of the last model retraining from an Airflow Variable.
+    - Loads an existing CSV file containing image metadata, or creates a new one if it doesn't exist.
+    - Appends new image records (not already in the CSV) with their URL, place, label, and creation time.
+    - Counts how many new images have been added since the last retraining.
+    - Saves the updated CSV file.
+    - Returns a string indicating whether to proceed with data preprocessing or skip training, 
+        based on the number of new images found (currently always returns 'preprocess_data').
+    Args:
+            **kwargs: Arbitrary keyword arguments (for Airflow compatibility).
+    Returns:
+            str: 'preprocess_data' if new images are found (or always, as currently implemented).
+    """
     cloudinary.config(
         cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
         api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -86,10 +104,10 @@ def check_and_generate_csv(**kwargs):
     else:
         logger.info("📄 No new records to append to CSV")
 
-    if new_image_count >= 10:
-        logger.info(f"✅ Found {new_image_count} new images since last retrain → preprocessing.")
-        return 'preprocess_data'
-    else:
-        logger.info(f"⏹ Only {new_image_count} new images found → skipping.")
-        return 'skip_training'
-    # return 'preprocess_data'
+    # if new_image_count >= 10:
+    #     logger.info(f"✅ Found {new_image_count} new images since last retrain → preprocessing.")
+    #     return 'preprocess_data'
+    # else:
+    #     logger.info(f"⏹ Only {new_image_count} new images found → skipping.")
+    #     return 'skip_training'
+    return 'preprocess_data'
