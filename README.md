@@ -214,7 +214,7 @@ cd app
 2. Build a Docker Image
 
 ```bash
-docker build --tag 'Structure_prediction_UI'
+docker build --tag . 'structure_prediction_ui'
 ```
 
 3. Access the website:
