@@ -83,11 +83,22 @@ To develop a robust crack detection system, we employed deep convolutional neura
 The dataset, organized into training, validation, and test splits, is managed using a custom CrackDataset class that inherits from \texttt{torch.utils.data.Dataset}. This class reads image paths and labels from CSV files, mapping labels ("Cracked" to 1, "Non-cracked" to 0). Images are preprocessed using \texttt{torchvision.transforms} to resize them to $224\times224$ pixels, convert them to tensors, and normalize them with ImageNet statistics (mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]). DataLoader objects facilitate batched loading with a batch size of 32, enabling efficient training and evaluation.
 
 \begin{lstlisting}[language=Python]
-# Transform to 244 x 244
+# Transform to 244 x 244 (training)
 transform = transforms.Compose([
 	transforms.Resize((224, 224)),
 	transforms.ToTensor(),
 	transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+# Transform to 224 x 224 (deployment to suit wider range)
+transform = transforms.Compose([
+    transforms.Resize(256),              # Resize shorter side to 256 px
+    transforms.CenterCrop(224),          # Crop center to 224×224
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406], 
+        std=[0.229, 0.224, 0.225]
+    )
 ])
 
 \end{lstlisting}
