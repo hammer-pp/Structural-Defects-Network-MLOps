@@ -20,6 +20,8 @@ docker build . --tag 'structure_prediction_ui'
 docker run -p 8000:8000 structure_prediction_ui
 ```
 
+or use `docker compose up --build`
+
 ## 💨 By fastapi cli
 
 1. Setup the virtual environment
