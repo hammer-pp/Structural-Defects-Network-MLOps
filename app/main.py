@@ -14,6 +14,8 @@ import cloudinary.uploader
 
 load_dotenv()  # Load .env
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -80,7 +82,8 @@ def load_model(model_name: str):
         raise ValueError("Unknown model")
 
     state_path = AVAILABLE_MODELS[model_name]
-    net.load_state_dict(torch.load(state_path, map_location="cpu"))
+    net.load_state_dict(torch.load(state_path, map_location=device))
+    net.to(device)
     net.eval()
     return net
 
@@ -97,7 +100,7 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
     
     contents = await file.read()
     image = Image.open(io.BytesIO(contents)).convert("RGB")
-    input_tensor = transform(image).unsqueeze(0)
+    input_tensor = transform(image).unsqueeze(0).to(device)
     
     # Generate UUID-based filename
     unique_id = uuid.uuid4().hex
